@@ -9,7 +9,7 @@ export const personalInfo = {
   phone: '(85) 98511-0225',
   whatsappUrl: 'https://wa.me/5585985110225',
   linkedinUrl: 'https://www.linkedin.com/in/samuelnobree/',
-  githubUrl: '#', 
+  githubUrl: 'https://github.com/samueix', 
   location: 'Fortaleza e Região – CE',
   cnh: 'A & B (Possui moto própria)',
   availability: 'Aberto a novas oportunidades (Presencial, Híbrido ou Remoto)',
@@ -47,7 +47,7 @@ export const experiences: Experience[] = [
       'Identificação, diagnóstico e solução definitiva de anomalias em redes de computadores e equipamentos de telecomunicação.',
       'Colaboração na reengenharia de processos operacionais e mineração de dados para fornecer insights estruturados à gerência.'
     ],
-    skills: ['Suporte Técnico N1/N2', 'Redes de Computadores', 'Gestão de Chamados', 'ITIL', 'Service Desk', 'Zabbix']
+    skills: ['Suporte Técnico N1/N2', 'Redes de Computadores', 'Gestão de Chamados', 'ITIL v4', 'Service Desk', 'Equipamentos de Rede']
   },
   {
     id: 'exp-2',
@@ -57,11 +57,11 @@ export const experiences: Experience[] = [
     location: 'Maracanaú, CE',
     description: [
       'Atuação especializada em laboratório com foco em triagem, testes de estresse, manutenção e diagnóstico de falhas em ativos de rede.',
-      'Validação e reparo físico/lógico em roteadores, switches, modems, ONUs, OLTs e demais dispositivos de telecomunicação.',
+      'Validação e reparo físico/lógico em roteadores, switches, modems, ONUs, OLTs e equipamentos de medição óptica (OTDR e Power Meter).',
       'Homologação de equipamentos antes do envio para clientes, reduzindo chamados pós-instalação.',
       'Elaboração de relatórios técnicos detalhados sobre as falhas mais recorrentes para acionar garantias de fornecedores.'
     ],
-    skills: ['Redes de Computadores', 'Equipamentos de Telecomunicações', 'Manutenção de Hardware', 'Diagnóstico de Falhas']
+    skills: ['Equipamentos de Telecomunicações', 'Instrumentação Óptica (OTDR / Power Meter)', 'Fibra Óptica Avançada', 'Diagnóstico de Hardware']
   },
   {
     id: 'exp-3',
@@ -71,11 +71,11 @@ export const experiences: Experience[] = [
     location: 'Fortaleza e Região – CE (Presencial / Híbrido)',
     description: [
       'Desenho e execução de projetos de infraestrutura de redes locais (LAN) e redes Wi-Fi de alta densidade para PMEs.',
-      'Instalação de cabeamento estruturado Cat5e/Cat6: conectorização, identificação física, organização de racks e fusões simples.',
+      'Instalação de cabeamento estruturado Cat6: conectorização, identificação física, organização de racks e fusões de fibra óptica.',
       'Certificação de pontos de rede seguindo normas técnicas nacionais, garantindo alta performance e imunidade a ruídos.',
-      'Montagem, manutenção preventiva e formatação de computadores de alto desempenho e servidores Windows/Linux de pequeno porte.'
+      'Montagem, manutenção preventiva e formatação de computadores de alto desempenho e servidores de pequeno porte.'
     ],
-    skills: ['Cabeamento Estruturado', 'Configuração de Wi-Fi', 'Windows Server', 'Linux', 'Manutenção de Computadores']
+    skills: ['Cabeamento Estruturado', 'Configuração de Wi-Fi', 'Equipamentos de Rede', 'Fusão de Fibra Óptica', 'Manutenção de Computadores']
   },
   {
     id: 'exp-4',
@@ -93,25 +93,28 @@ export const experiences: Experience[] = [
 ];
 
 export const skills: Skill[] = [
-  // 1. Suporte & Infraestrutura
+  // 1. Suporte Técnico & Operações de TI
   { name: 'Suporte Técnico N1/N2', level: 100, category: 'suporte' },
-  { name: 'Service Desk', level: 100, category: 'suporte' },
+  { name: 'Service Desk & Atendimento ao Usuário', level: 100, category: 'suporte' },
+  { name: 'Gestão de Chamados (SLA) & Metodologias ITIL', level: 100, category: 'suporte' },
+  { name: 'Microsoft Windows & Sistemas Operacionais', level: 100, category: 'suporte' },
+  { name: 'Diagnóstico de Incidentes & Resolução em Primeiro Contato', level: 100, category: 'suporte' },
+  { name: 'Procedimentos Operacionais Padrão (POP)', level: 100, category: 'suporte' },
   { name: 'Active Directory (Conhecimento Teórico)', level: 100, category: 'suporte' },
-  { name: 'Microsoft Windows', level: 100, category: 'suporte' },
-  { name: 'Atendimento ao Usuário', level: 100, category: 'suporte' },
-  { name: 'Gestão de Chamados (SLA)', level: 100, category: 'suporte' },
-  { name: 'Metodologias ITIL', level: 100, category: 'suporte' },
-  { name: 'Diagnóstico de Incidentes', level: 100, category: 'suporte' },
+  { name: 'Zabbix & pfSense (Conhecimento Teórico)', level: 100, category: 'suporte' },
+  { name: 'Docker Containers (Conceito Teórico)', level: 100, category: 'suporte' },
   
-  // 2. Redes & Telecom
-  { name: 'Redes TCP/IP & Subredes', level: 100, category: 'redes' },
-  { name: 'Protocolos (DNS, DHCP)', level: 100, category: 'redes' },
-  { name: 'Conexões PPPoE / GPON / FTTH / XGS', level: 100, category: 'redes' },
-  { name: 'Configuração de OLT & ONU', level: 100, category: 'redes' },
-  { name: 'Switches & Roteadores', level: 100, category: 'redes' },
-  { name: 'Wi-Fi Corporativo & Ubiquiti', level: 100, category: 'redes' },
-  { name: 'Cabeamento Estruturado', level: 100, category: 'redes' },
-  { name: 'Organização de Racks & Fusão', level: 100, category: 'redes' },
+  // 2. Telecomunicações & Redes Avançadas (Foco Prático: Equipamentos, OTDR, Power Meter, Fibra)
+  { name: 'Equipamentos de Rede (Switches, Roteadores & Modems)', level: 100, category: 'redes' },
+  { name: 'Instrumentação Óptica (OTDR - Reflectômetro Óptico)', level: 100, category: 'redes' },
+  { name: 'Medição de Potência Óptica (Power Meter & VFL Caneta Óptica)', level: 100, category: 'redes' },
+  { name: 'Fibra Óptica Avançada (FTTH / GPON / EPON / XGS-PON)', level: 100, category: 'redes' },
+  { name: 'Fusão de Fibra Óptica (Máquina de Emenda por Arco Voltaico)', level: 100, category: 'redes' },
+  { name: 'Infraestrutura Passiva Óptica (DIO, CTO, Splitters & Caixas de Emenda)', level: 100, category: 'redes' },
+  { name: 'Configuração e Homologação de OLT & ONU', level: 100, category: 'redes' },
+  { name: 'Wi-Fi Corporativo & Ecossistema UniFi (UEWA)', level: 100, category: 'redes' },
+  { name: 'Cabeamento Estruturado Cat6, Patch Panels & Racks', level: 100, category: 'redes' },
+  { name: 'Redes TCP/IP, Subredes, Roteamento & Protocolos (DNS/DHCP)', level: 100, category: 'redes' },
 
   // 3. Vibe Coding & Automação
   { name: 'Vibe Coding (Desenvolvimento com IA)', level: 100, category: 'desenvolvimento' },
@@ -119,7 +122,7 @@ export const skills: Skill[] = [
   { name: 'Automação de Processos com IA', level: 100, category: 'desenvolvimento' },
   { name: 'Integração de APIs REST via IA', level: 100, category: 'desenvolvimento' },
   { name: 'Front-end com IA (HTML/CSS/JS)', level: 100, category: 'desenvolvimento' },
-  { name: 'Controle de Versão (Git & GitHub)', level: 100, category: 'desenvolvimento' },
+  { name: 'Controle de Versão (Git & GitHub: samueix)', level: 100, category: 'desenvolvimento' },
 
   // 4. Inteligência Artificial
   { name: 'Vibe Coding & Prototipação Ágil', level: 100, category: 'ia' },

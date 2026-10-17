@@ -117,14 +117,14 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
             )}
           </p>
 
-          {/* 2) AS 4 CAIXAS DE NÚMEROS: fundo branco, borda 1px #E6E1D6, padronizadas com padding 16px (p-4), altura uniforme e alinhamento impecável */}
+          {/* 2) AS 4 CAIXAS DE NÚMEROS: fundo branco, borda 1px #E6E1D6, padronizadas com padding 16px (p-4), sem transbordamento */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-8 pt-6 border-t border-[#E6E1D6]">
             
             {/* 1. Experiência */}
-            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
+            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
               <span className="text-[11px] sm:text-xs font-bold text-[#4A5565] block uppercase tracking-wide">Experiência</span>
               <div className="mt-2">
-                <span className="text-2xl sm:text-3xl font-extrabold font-display text-[#0F766E] leading-none block whitespace-nowrap">
+                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold font-display text-[#0F766E] leading-tight block whitespace-nowrap">
                   <AnimatedCounter end={personalInfo.experienceYears} suffix="+" />
                   <span className="text-xs font-normal font-sans ml-1 text-[#4A5565]">anos</span>
                 </span>
@@ -134,8 +134,8 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
               </div>
             </div>
 
-            {/* 2. Atuação (Substitui Início / 100%) */}
-            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
+            {/* 2. Atuação */}
+            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
               <span className="text-[11px] sm:text-xs font-bold text-[#4A5565] block uppercase tracking-wide">Atuação</span>
               <div className="mt-2">
                 <span className="text-xs sm:text-[13px] font-bold font-display text-[#0F766E] leading-snug block">
@@ -148,23 +148,23 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
             </div>
 
             {/* 3. Nível de Suporte */}
-            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
+            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
               <span className="text-[11px] sm:text-xs font-bold text-[#4A5565] block uppercase tracking-wide">Nível de Suporte</span>
               <div className="mt-2">
-                <span className="text-2xl sm:text-3xl font-extrabold font-display text-[#0F766E] leading-none block whitespace-nowrap">
+                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold font-display text-[#0F766E] leading-tight block whitespace-nowrap">
                   N1/N2
                 </span>
                 <span className="text-[11px] font-normal font-sans block text-[#4A5565] mt-1.5 leading-tight">
-                  atendimento e infraestrutura
+                  atendimento e infra
                 </span>
               </div>
             </div>
 
-            {/* 4. Mobilidade */}
-            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
+            {/* 4. Mobilidade - Corrigido para não vazar a borda do cartão (imagem anexada) */}
+            <div className="bg-[#FFFFFF] border border-[#E6E1D6] p-4 rounded-[12px] h-full min-h-[116px] flex flex-col justify-between overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#0F766E]">
               <span className="text-[11px] sm:text-xs font-bold text-[#4A5565] block uppercase tracking-wide">Mobilidade</span>
               <div className="mt-2">
-                <span className="text-2xl sm:text-3xl font-extrabold font-display text-[#0F766E] leading-none block whitespace-nowrap">
+                <span className="text-[1.15rem] sm:text-xl md:text-2xl font-extrabold font-display text-[#0F766E] leading-tight block tracking-tight">
                   CNH A & B
                 </span>
                 <span className="text-[11px] font-normal font-sans block text-[#4A5565] mt-1.5 leading-tight">
@@ -224,7 +224,7 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
               <img 
                 src={personalInfo.imageUrl || "/foto_perfil/samuel.png"} 
                 alt={personalInfo.fullName}
-                className="w-full h-full object-cover object-top contrast-[1.03] saturate-[1.08] transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover object-top brightness-[1.18] contrast-[1.02] saturate-[1.04] transition-transform duration-300 hover:scale-105"
                 onError={() => setImageError(true)}
               />
             ) : (

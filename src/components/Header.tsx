@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Printer, Lock } from 'lucide-react';
+import { Menu, X, Printer } from 'lucide-react';
 
 interface HeaderProps {
   activeSection: string;
   setActiveSection: (section: string) => void;
   isPrintMode: boolean;
   setIsPrintMode: (mode: boolean) => void;
-  onAdminClick?: () => void;
 }
 
-export default function Header({ activeSection, setActiveSection, isPrintMode, setIsPrintMode, onAdminClick }: HeaderProps) {
+export default function Header({ activeSection, setActiveSection, isPrintMode, setIsPrintMode }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -70,8 +69,15 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
           onClick={() => handleNavClick('inicio')}
           className="flex items-center gap-3 text-left focus:outline-none cursor-pointer group py-1"
         >
-          <span className="w-10 h-10 rounded-full bg-[#0F766E] text-white font-display font-extrabold text-sm flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 shadow-sm" aria-hidden="true">
-            SV
+          <span className="w-10 h-10 rounded-[10px] bg-[#0F766E] text-white flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 shadow-sm p-2" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="white" fillOpacity="0.2" />
+              <polyline points="14 2 14 8 20 8" />
+              <circle cx="9.5" cy="11" r="1.5" fill="currentColor" />
+              <line x1="13" y1="11" x2="16" y2="11" />
+              <line x1="8" y1="15" x2="16" y2="15" />
+              <line x1="8" y1="18" x2="13" y2="18" />
+            </svg>
           </span>
           <div className="flex flex-col justify-center">
             <span className="block text-sm sm:text-base font-extrabold font-display text-[#1B2430] leading-none mb-1">
@@ -126,16 +132,6 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
               <span>{isPrintMode ? 'Ver Site' : 'Versão PDF'}</span>
             </button>
 
-            {onAdminClick && (
-              <button 
-                onClick={onAdminClick}
-                aria-label="Acesso Administrativo"
-                title="Acesso Administrativo"
-                className="p-2 rounded-full border border-[#E6E1D6] bg-[#FFFFFF] text-[#4A5565] hover:text-[#0F766E] hover:border-[#0F766E] hover:bg-[#F1EEE6] transition-all cursor-pointer"
-              >
-                <Lock className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" />
-              </button>
-            )}
           </div>
         </nav>
 
@@ -194,18 +190,6 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
               </button>
             );
           })}
-          {onAdminClick && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                onAdminClick();
-              }}
-              className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#0F766E] hover:bg-[#F1EEE6] rounded-full flex items-center gap-2 pt-2 border-t border-[#E6E1D6] mt-2 cursor-pointer"
-            >
-              <Lock className="w-4 h-4" strokeWidth={2} aria-hidden="true" />
-              <span>Acesso Administrativo</span>
-            </button>
-          )}
         </div>
       )}
     </header>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Briefcase, 
   GraduationCap, 
@@ -61,7 +61,8 @@ export default function App() {
         const hasOldTitle = parsed.title === 'Analista de Operações de TI';
         const hasOldLocation = parsed.location === 'Fortaleza – CE';
         const isMissingWebsite = !parsed.websiteUrl;
-        if (!parsed.languages || !parsed.tools || parsed.bio.includes('dedicado e motivado') || hasOldLinkedin || hasOldTitle || hasOldLocation || isMissingWebsite) {
+        const hasOldGithub = !parsed.githubUrl || parsed.githubUrl === '#' || !parsed.githubUrl.includes('samueix');
+        if (!parsed.languages || !parsed.tools || parsed.bio.includes('dedicado e motivado') || hasOldLinkedin || hasOldTitle || hasOldLocation || isMissingWebsite || hasOldGithub) {
           const migrated = { 
             ...defaultPersonalInfo, 
             ...parsed, 
@@ -72,6 +73,7 @@ export default function App() {
             tools: defaultPersonalInfo.tools, 
             english: defaultPersonalInfo.english,
             linkedinUrl: defaultPersonalInfo.linkedinUrl,
+            githubUrl: defaultPersonalInfo.githubUrl || 'https://github.com/samueix',
             websiteUrl: defaultPersonalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/'
           };
           localStorage.setItem('personalInfo', JSON.stringify(migrated));
@@ -80,6 +82,7 @@ export default function App() {
         return { 
           ...defaultPersonalInfo, 
           ...parsed, 
+          githubUrl: 'https://github.com/samueix',
           websiteUrl: parsed.websiteUrl || defaultPersonalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/' 
         };
       } catch (e) {
@@ -234,6 +237,63 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Atalho oculto para o Kit do Candidato (#admin na URL ou Alt+A no teclado)
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash === '#admin' || window.location.search.includes('admin=true')) {
+        setIsAdminMode(true);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.altKey && (e.key === 'a' || e.key === 'A')) || (e.ctrlKey && e.shiftKey && (e.key === 'a' || e.key === 'A'))) {
+        e.preventDefault();
+        setIsAdminMode(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', checkHash);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Atalho exclusivo para celular: Toque triplo rápido ou segurar por 1.2s no rodapé
+  const tapTimeoutRef = useRef<number | null>(null);
+  const [tapCount, setTapCount] = useState(0);
+  const longPressTimeoutRef = useRef<number | null>(null);
+
+  const handleMobileSecretTap = () => {
+    setTapCount(prev => {
+      const next = prev + 1;
+      if (next >= 3) {
+        setIsAdminMode(true);
+        return 0;
+      }
+      if (tapTimeoutRef.current) window.clearTimeout(tapTimeoutRef.current);
+      tapTimeoutRef.current = window.setTimeout(() => {
+        setTapCount(0);
+      }, 700);
+      return next;
+    });
+  };
+
+  const handleTouchStart = () => {
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      setIsAdminMode(true);
+    }, 1200);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimeoutRef.current) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  };
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -266,48 +326,41 @@ export default function App() {
   }
 
   const techMarqueeList = [
-    "MikroTik RouterOS",
-    "Zabbix Monitoring",
-    "GLPI Service Desk",
-    "pfSense Firewall",
-    "Cisco Packet Tracer",
-    "Fibra Óptica & OTDR",
-    "Fusão de Fibra",
-    "Switches Gerenciáveis L2/L3",
-    "VLANs (802.1Q)",
-    "Active Directory & GPO",
-    "Windows Server",
-    "Linux (Debian/Ubuntu)",
-    "Wi-Fi Corporativo (UniFi)",
-    "Wireshark",
+    "Equipamentos de Rede",
+    "Instrumentação Óptica (OTDR)",
+    "Medição com Power Meter",
+    "Fibra Óptica Avançada",
+    "Fusão de Fibra Óptica (Arco Voltaico)",
+    "FTTH / GPON / EPON",
+    "Switches Gerenciáveis & Roteadores",
+    "Configuração de OLT & ONU",
+    "DIO, CTO & Caixas de Emenda",
+    "Wi-Fi Corporativo (UniFi UEWA)",
+    "Cabeamento Estruturado Cat6",
+    "Redes TCP/IP & Sub-redes",
+    "Service Desk & ITIL v4",
+    "Suporte Técnico N1/N2",
+    "Active Directory (Teórico)",
+    "Zabbix & pfSense (Teórico)",
+    "Docker (Teórico)",
     "Python & Automações",
-    "Vibe Coding & LLMs",
-    "Docker Containers",
-    "ITIL v4 Best Practices"
+    "Vibe Coding & GitHub: samueix"
   ];
 
   return (
     <div className="min-h-screen bg-[#FFFBF2] text-[#1B2430] font-sans selection:bg-[#0F766E] selection:text-white">
       
-      {/* Admin Panel Modal Overlay */}
+      {/* Kit do Candidato (Aba Admin Oculta - acesso via #admin ou atalho Alt+A) */}
       {isAdminMode && (
         <AdminPanel
           isOpen={isAdminMode}
-          onClose={() => setIsAdminMode(false)}
+          onClose={() => {
+            setIsAdminMode(false);
+            if (window.location.hash === '#admin') {
+              history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+          }}
           personalInfo={personalInfo}
-          setPersonalInfo={setPersonalInfo}
-          experiences={experiences}
-          setExperiences={setExperiences}
-          skills={skills}
-          setSkills={setSkills}
-          certifications={certifications}
-          setCertifications={setCertifications}
-          educations={educations}
-          setEducations={setEducations}
-          projects={projects}
-          setProjects={setProjects}
-          savedMessages={savedMessages}
-          setSavedMessages={setSavedMessages}
         />
       )}
 
@@ -317,7 +370,6 @@ export default function App() {
         setActiveSection={setActiveSection}
         isPrintMode={isPrintMode}
         setIsPrintMode={setIsPrintMode}
-        onAdminClick={() => setIsAdminMode(true)}
       />
 
       {/* Main Content Area */}
@@ -564,18 +616,19 @@ export default function App() {
           </div>
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm font-medium text-[#E6E1D6]">
-            <p>© 2026 {personalInfo.fullName} • Infraestrutura, Redes & Operações de TI</p>
+            <p 
+              onClick={handleMobileSecretTap}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              className="cursor-pointer select-none transition-colors active:text-[#0F766E]"
+              title="Samuel Victor da Silva Nobre"
+            >
+              © 2026 {personalInfo.fullName} • Infraestrutura, Redes & Operações de TI
+            </p>
             <div className="flex items-center gap-4">
               <a href={personalInfo.linkedinUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F766E] transition-colors font-bold">LinkedIn</a>
               <span>•</span>
               <a href={personalInfo.githubUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F766E] transition-colors font-bold">GitHub</a>
-              <span>•</span>
-              <button 
-                onClick={() => setIsAdminMode(true)}
-                className="text-[#E6E1D6] hover:text-[#0F766E] transition-colors cursor-pointer font-bold"
-              >
-                Admin
-              </button>
             </div>
           </div>
         </div>

@@ -187,7 +187,7 @@ export default function PrintResume({
                 <img 
                   src={personalInfo.imageUrl || "/foto_perfil/samuel.png"} 
                   alt={personalInfo.fullName}
-                  className="w-full h-full object-cover object-top grayscale"
+                  className="w-full h-full object-cover object-top filter grayscale contrast-105 brightness-110"
                 />
               </div>
             </div>
@@ -215,6 +215,15 @@ export default function PrintResume({
               </div>
               <div className="flex flex-wrap items-center gap-x-2.5 justify-center sm:justify-start print:justify-start">
                 <span>{personalInfo.linkedinUrl ? personalInfo.linkedinUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '') : 'linkedin.com'}</span>
+                <span className="text-[#0F766E] font-bold select-none">•</span>
+                <a 
+                  href={personalInfo.githubUrl || 'https://github.com/samueix'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#0F766E] font-medium hover:underline"
+                >
+                  github.com/samueix
+                </a>
                 <span className="text-[#0F766E] font-bold select-none">•</span>
                 <a 
                   href={websiteUrl}
@@ -394,16 +403,16 @@ export default function PrintResume({
                   Suporte & Operações
                 </div>
                 <div className="leading-tight">
-                  Suporte N1/N2, Service Desk, Active Directory (Teórico), Windows, Atendimento ao Usuário, Gestão de Chamados (SLA), Metodologias ITIL, Diagnóstico.
+                  Suporte N1/N2, Service Desk, Atendimento ao Usuário, Gestão de Chamados (SLA), ITIL v4, Active Directory / Zabbix / pfSense / Docker (Fundamentos Teóricos), Windows.
                 </div>
               </div>
 
               <div className="p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <div className="font-mono font-bold text-[#17181A] text-[9.5px] uppercase border-b border-[#E6E1D6] pb-0.5 mb-1 text-[#0F766E]">
-                  Redes & Telecom
+                  Telecom & Redes Ópticas
                 </div>
                 <div className="leading-tight">
-                  TCP/IP, DNS, DHCP, PPPoE, GPON, FTTH, XGS, OLT, ONU, Switches, Wi-Fi Corporativo, UniFi, Cabeamento Estruturado, Racks.
+                  Equipamentos de Rede (Switches, Roteadores), OTDR, Power Meter, Fibra Óptica Avançada (FTTH/GPON), Máquina de Fusão de Fibra, OLT/ONU, DIO/CTO, Wi-Fi UniFi (UEWA), Cat6.
                 </div>
               </div>
 
@@ -412,7 +421,7 @@ export default function PrintResume({
                   Vibe Coding & Automação
                 </div>
                 <div className="leading-tight">
-                  Vibe Coding, Scripts Python via IA, Automação de Processos, Integração de APIs REST, Front-end com IA (HTML/CSS/JS), Git & GitHub.
+                  Vibe Coding, Scripts Python via IA, Automação de Processos, APIs REST, Front-end com IA (HTML/CSS/JS), Git & GitHub: samueix.
                 </div>
               </div>
 
