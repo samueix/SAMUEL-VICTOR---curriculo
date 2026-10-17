@@ -175,19 +175,11 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
 
           </div>
 
-          {/* Key practical info pills */}
+          {/* Informações complementares sem redundância com os 4 cartões acima */}
           <div className="mt-5 flex flex-wrap gap-2 text-xs sm:text-sm font-medium text-[#4A5565]">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] border border-[#E6E1D6] rounded-full text-[#1B2430]">
               <MapPin className="w-3.5 h-3.5 text-[#0F766E]" strokeWidth={2} aria-hidden="true" />
               {personalInfo.location}
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] border border-[#E6E1D6] rounded-full text-[#1B2430]">
-              <Bike className="w-3.5 h-3.5 text-[#0F766E]" strokeWidth={2} aria-hidden="true" />
-              {personalInfo.cnh}
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] border border-[#E6E1D6] rounded-full text-[#1B2430]">
-              <Briefcase className="w-3.5 h-3.5 text-[#0F766E]" strokeWidth={2} aria-hidden="true" />
-              Presencial / Híbrido / Remoto
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFFFF] border border-[#E6E1D6] rounded-full text-[#1B2430]">
               <Calendar className="w-3.5 h-3.5 text-[#0F766E]" strokeWidth={2} aria-hidden="true" />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Printer, Mail, Phone, MapPin, Linkedin, Calendar, Award, GraduationCap, ArrowLeft, Camera, Globe, QrCode } from 'lucide-react';
+import { Printer, ArrowLeft, Camera, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PersonalInfo, Experience, Skill, Certification, Education, Project } from '../types';
 
@@ -43,7 +43,7 @@ export default function PrintResume({
         @media print {
           @page {
             size: A4 portrait;
-            margin: 10mm 12mm 10mm 12mm !important;
+            margin: 12mm !important;
           }
           *, *::before, *::after {
             letter-spacing: 0 !important;
@@ -63,10 +63,15 @@ export default function PrintResume({
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          h1, h2, h3, h4, h5, h6, p, span, div, li, strong, a {
+          h1, h2, h3, h4, h5, h6 {
             letter-spacing: 0 !important;
             word-spacing: normal !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+          }
+          p, span, div, li, strong, a {
+            letter-spacing: 0 !important;
+            word-spacing: normal !important;
+            font-family: Arial, Helvetica, sans-serif !important;
           }
           img {
             max-width: 100% !important;
@@ -132,7 +137,7 @@ export default function PrintResume({
               className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                 localShowPhoto 
                   ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-sm' 
-                : 'bg-[#FFFFFF] text-[#4A5565] border-[#E6E1D6] hover:bg-[#F1EEE6]'
+                  : 'bg-[#FFFFFF] text-[#4A5565] border-[#E6E1D6] hover:bg-[#F1EEE6]'
               }`}
               title="Alternar inclusão da foto"
             >
@@ -175,7 +180,7 @@ export default function PrintResume({
       <div className="print-sheet max-w-4xl mx-auto border border-[#E6E1D6] p-8 sm:p-10 rounded-[12px] bg-white text-[#17181A] relative shadow-sm print:border-0 print:border-none print:p-0 print:m-0 print:rounded-none print:shadow-none print:bg-white print:text-black">
         
         {/* Top Header */}
-        <div className="border-b border-[#17181A] pb-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:flex print:flex-row print:items-center print:justify-between print:gap-4 print:text-left print-break-inside-avoid">
+        <div className="border-b border-[#17181A] pb-3 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:flex print:flex-row print:items-center print:justify-between print:gap-4 print:text-left print-break-inside-avoid">
           {localShowPhoto && (
             <div className="shrink-0 flex justify-center print:shrink-0">
               <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-[4px] overflow-hidden border border-[#17181A] bg-[#F5F3EE] print:w-20 print:h-20 print:rounded-[3px]">
@@ -199,24 +204,27 @@ export default function PrintResume({
               {personalInfo.subtitle}
             </p>
             
-            {/* Quick Contacts */}
-            <div className="flex flex-wrap gap-y-1 gap-x-3.5 mt-3 text-[11px] font-mono text-[#5B5E62] justify-center sm:justify-start print:justify-start">
-              <span>{personalInfo.email}</span>
-              <span>•</span>
-              <span>{personalInfo.phone}</span>
-              <span>•</span>
-              <span>{personalInfo.location}</span>
-              <span>•</span>
-              <span>{personalInfo.linkedinUrl ? personalInfo.linkedinUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '') : 'linkedin.com'}</span>
-              <span>•</span>
-              <a 
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#0F766E] font-medium hover:underline"
-              >
-                {displayWebsite}
-              </a>
+            {/* Quick Contacts: 2 linhas organizadas, sem nenhum separador "•" sobrando no final */}
+            <div className="mt-2 space-y-0.5 text-[10.5px] font-mono text-[#5B5E62]">
+              <div className="flex flex-wrap items-center gap-x-2.5 justify-center sm:justify-start print:justify-start">
+                <span>{personalInfo.email}</span>
+                <span className="text-[#0F766E] font-bold select-none">•</span>
+                <span>{personalInfo.phone}</span>
+                <span className="text-[#0F766E] font-bold select-none">•</span>
+                <span>{personalInfo.location}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2.5 justify-center sm:justify-start print:justify-start">
+                <span>{personalInfo.linkedinUrl ? personalInfo.linkedinUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '') : 'linkedin.com'}</span>
+                <span className="text-[#0F766E] font-bold select-none">•</span>
+                <a 
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#0F766E] font-medium hover:underline"
+                >
+                  {displayWebsite}
+                </a>
+              </div>
             </div>
           </div>
 
@@ -245,11 +253,11 @@ export default function PrintResume({
         </div>
 
         {/* Content Flow in Full Width: Ensures Page 2 and all sections occupy 100% width with no empty right column */}
-        <div className="mt-5 space-y-5 print:space-y-4">
+        <div className="mt-4 space-y-4 print:space-y-3">
           
           {/* Section: Objetivo Profissional */}
           <div className="print-break-inside-avoid">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-1.5">
               Objetivo Profissional
             </h2>
             <p className="text-xs text-[#5B5E62] leading-relaxed text-justify">
@@ -259,11 +267,11 @@ export default function PrintResume({
 
           {/* Section: Experiência Profissional */}
           <div>
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-3">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2.5">
               Experiência Profissional
             </h2>
             
-            <div className="space-y-3.5 print:space-y-3">
+            <div className="space-y-3 print:space-y-2.5">
               {experiences.map((exp) => (
                 <div key={exp.id} className="print-break-inside-avoid">
                   <div className="flex justify-between items-baseline gap-2">
@@ -293,11 +301,11 @@ export default function PrintResume({
 
           {/* Section: Formação Acadêmica */}
           <div className="print-break-inside-avoid">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-3">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2.5">
               Formação Acadêmica
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 print:grid-cols-3 print:gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 print:grid-cols-3 print:gap-2.5">
               {educations.map((edu, idx) => {
                 const degreeLower = edu.degree.toLowerCase();
                 const isEmAndamentoInDegree = degreeLower.includes('em andamento') || degreeLower.includes('(em andamento)');
@@ -332,19 +340,19 @@ export default function PrintResume({
             </div>
           </div>
 
-          {/* Section: Projetos & Cases Técnicos */}
+          {/* Section: Projetos & Cases Técnicos (Todos os 6 projetos em grade 3x2, completando a página 2) */}
           <div className="print-break-inside-avoid">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-3">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2.5">
               Projetos & Cases Técnicos
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 print:grid-cols-3 print:gap-3">
-              {projects.slice(0, 3).map((proj, idx) => (
-                <div key={idx} className="print-break-inside-avoid p-2.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB] print:p-2 flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 print:grid-cols-3 print:gap-2">
+              {projects.slice(0, 6).map((proj, idx) => (
+                <div key={idx} className="print-break-inside-avoid p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB] print:p-2 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-[11px] font-semibold text-[#17181A] leading-tight">
+                    <h3 className="text-[10.5px] font-semibold text-[#17181A] leading-tight">
                       {proj.title}
                     </h3>
-                    <p className="text-[9.5px] text-[#5B5E62] mt-1 leading-snug">
+                    <p className="text-[9px] text-[#5B5E62] mt-1 leading-snug">
                       {proj.description}
                     </p>
                   </div>
@@ -360,32 +368,33 @@ export default function PrintResume({
 
           {/* Section: Certificações & Qualificações em Largura Total */}
           <div className="print-break-inside-avoid">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2.5">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2">
               Certificações & Qualificações
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 print:grid-cols-4 print:gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 print:grid-cols-4 print:gap-2">
               {certifications.map((cert, idx) => (
                 <div key={idx} className="print-break-inside-avoid p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
-                  <strong className="text-[#17181A] block font-semibold text-[10px] leading-tight">{cert.name}</strong>
-                  <span className="font-mono text-[9px] text-[#5B5E62] block mt-0.5">{cert.institution} ({cert.year})</span>
+                  <strong className="text-[#17181A] block font-semibold text-[9.5px] leading-tight">{cert.name}</strong>
+                  <span className="font-mono text-[8.5px] text-[#5B5E62] block mt-0.5">{cert.institution} ({cert.year})</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Section: Habilidades Técnicas & Pessoais em Largura Total */}
+          {/* Section: Habilidades Técnicas & Pessoais Completas */}
           <div className="print-break-inside-avoid">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2.5">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2">
               Habilidades Técnicas & Pessoais
             </h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 print:grid-cols-4 print:gap-2.5 text-[9.5px] text-[#5B5E62]">
+            {/* Grade de 4 Categorias Técnicas */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 print:grid-cols-4 print:gap-2 text-[9px] text-[#5B5E62]">
               <div className="p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <div className="font-mono font-bold text-[#17181A] text-[9.5px] uppercase border-b border-[#E6E1D6] pb-0.5 mb-1 text-[#0F766E]">
                   Suporte & Operações
                 </div>
                 <div className="leading-tight">
-                  Suporte N1/N2, Service Desk, Active Directory (Teórico), Windows, Atendimento, ITIL v4, Diagnóstico.
+                  Suporte N1/N2, Service Desk, Active Directory (Teórico), Windows, Atendimento ao Usuário, Gestão de Chamados (SLA), Metodologias ITIL, Diagnóstico.
                 </div>
               </div>
 
@@ -394,36 +403,53 @@ export default function PrintResume({
                   Redes & Telecom
                 </div>
                 <div className="leading-tight">
-                  TCP/IP, DNS, DHCP, PPPoE, GPON, FTTH, XGS, OLT, ONU, Switches, Wi-Fi Corporativo, UniFi, Cabeamento.
+                  TCP/IP, DNS, DHCP, PPPoE, GPON, FTTH, XGS, OLT, ONU, Switches, Wi-Fi Corporativo, UniFi, Cabeamento Estruturado, Racks.
                 </div>
               </div>
 
               <div className="p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <div className="font-mono font-bold text-[#17181A] text-[9.5px] uppercase border-b border-[#E6E1D6] pb-0.5 mb-1 text-[#0F766E]">
-                  Vibe Coding & IA
+                  Vibe Coding & Automação
                 </div>
                 <div className="leading-tight">
-                  Vibe Coding, Scripts Python via IA, Automação de Processos, APIs REST, Git & GitHub, Engenharia de Prompt.
+                  Vibe Coding, Scripts Python via IA, Automação de Processos, Integração de APIs REST, Front-end com IA (HTML/CSS/JS), Git & GitHub.
                 </div>
               </div>
 
               <div className="p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <div className="font-mono font-bold text-[#17181A] text-[9.5px] uppercase border-b border-[#E6E1D6] pb-0.5 mb-1 text-[#0F766E]">
-                  Habilidades Pessoais
+                  Inteligência Artificial
                 </div>
                 <div className="leading-tight">
-                  Resolução de Problemas, Comunicação Eficiente, Organização, Proatividade, Adaptabilidade e Aprendizado Contínuo.
+                  Engenharia de Prompt, Modelos LLM (ChatGPT, Claude, Gemini), Prototipação Ágil via IA, Otimização de fluxos de suporte, Depuração com IA.
                 </div>
+              </div>
+            </div>
+
+            {/* Habilidades Pessoais (Soft Skills) - Todas as 8 completas de data.ts */}
+            <div className="mt-2 p-2 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
+              <div className="font-mono font-bold text-[#17181A] text-[9.5px] uppercase border-b border-[#E6E1D6] pb-0.5 mb-1 text-[#0F766E]">
+                Habilidades Pessoais (Soft Skills)
+              </div>
+              <div className="text-[9px] font-mono text-[#4A5565] leading-relaxed flex flex-wrap gap-x-3 gap-y-1">
+                <span>• Resolução de Problemas</span>
+                <span>• Comunicação Eficiente</span>
+                <span>• Organização & Documentação</span>
+                <span>• Proatividade</span>
+                <span>• Trabalho em Equipe</span>
+                <span>• Adaptabilidade</span>
+                <span>• Pensamento Analítico</span>
+                <span>• Aprendizado Contínuo</span>
               </div>
             </div>
           </div>
 
-          {/* Section: Dados Adicionais em Largura Total */}
-          <div className="print-break-inside-avoid pt-1">
-            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-2">
+          {/* Section: Dados Adicionais em Largura Total com Ferramentas Completas */}
+          <div className="print-break-inside-avoid pt-0.5">
+            <h2 className="font-mono text-xs font-bold text-[#17181A] uppercase border-b border-[#D9D5CB] pb-1 mb-1.5">
               Dados Adicionais
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9.5px] font-mono text-[#5B5E62] print:grid-cols-4 print:gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[9px] font-mono text-[#5B5E62] print:grid-cols-4 print:gap-1.5">
               <div className="p-1.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <strong className="text-[#17181A] block">CNH:</strong>
                 <span>{personalInfo.cnh}</span>
@@ -433,13 +459,23 @@ export default function PrintResume({
                 <span>Aberto a novas oportunidades</span>
               </div>
               <div className="p-1.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
-                <strong className="text-[#17181A] block">Idiomas:</strong>
-                <span>{personalInfo.languages ? personalInfo.languages.map(l => l.split(' – ')[0]).join(', ') : 'Português, Inglês'}</span>
-              </div>
-              <div className="p-1.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
                 <strong className="text-[#17181A] block">Atuação:</strong>
                 <span>Presencial, Híbrido ou Remoto</span>
               </div>
+              <div className="p-1.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB]">
+                <strong className="text-[#17181A] block">Idiomas:</strong>
+                <span>Português (Nativo), Inglês (Técnico)</span>
+              </div>
+            </div>
+
+            {/* Linha de Ferramentas restaurada */}
+            <div className="mt-2 p-1.5 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[4px] print:bg-white print:border-[#D9D5CB] text-[9px] font-mono text-[#4A5565] leading-snug">
+              <strong className="text-[#17181A]">Ferramentas: </strong>
+              <span>
+                {personalInfo.tools && personalInfo.tools.length > 0 
+                  ? personalInfo.tools.join(', ') 
+                  : 'Visual Studio Code, GitHub, Notion, Google Sheets com Google Apps Script, Telegram Bot API, PyQt6'}
+              </span>
             </div>
           </div>
 

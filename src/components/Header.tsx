@@ -104,12 +104,23 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
 
           <div className="flex items-center gap-2 pl-3 ml-2 border-l border-[#E6E1D6]">
             <button
-              onClick={() => setIsPrintMode(!isPrintMode)}
+              onClick={() => {
+                if (isPrintMode) {
+                  setIsPrintMode(false);
+                } else {
+                  setIsPrintMode(true);
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                  setTimeout(() => {
+                    window.print();
+                  }, 250);
+                }
+              }}
               className={`px-3.5 py-1.5 text-xs font-bold rounded-full border border-[#E6E1D6] flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                 isPrintMode
                   ? 'bg-[#0F766E] text-white border-[#0F766E]'
                   : 'bg-[#FFFFFF] text-[#1B2430] hover:text-[#0F766E] hover:border-[#0F766E] hover:bg-[#F1EEE6]'
               }`}
+              title="Abrir versão de impressão e salvar em PDF"
             >
               <Printer className="w-3.5 h-3.5 text-current" strokeWidth={2} aria-hidden="true" />
               <span>{isPrintMode ? 'Ver Site' : 'Versão PDF'}</span>
@@ -131,7 +142,17 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
         {/* Mobile menu toggle & print button */}
         <div className="flex items-center gap-2 md:hidden">
           <button
-            onClick={() => setIsPrintMode(!isPrintMode)}
+            onClick={() => {
+              if (isPrintMode) {
+                setIsPrintMode(false);
+              } else {
+                setIsPrintMode(true);
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                setTimeout(() => {
+                  window.print();
+                }, 250);
+              }
+            }}
             aria-label={isPrintMode ? "Ver Site Completo" : "Alternar para Versão Impressa"}
             className={`p-2 rounded-full border border-[#E6E1D6] transition-colors cursor-pointer ${
               isPrintMode

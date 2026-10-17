@@ -174,7 +174,22 @@ export default function App() {
     const stored = localStorage.getItem('educations');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        const migrated = parsed.map((edu: any) => {
+          let status = edu.status;
+          if (status === 'Incompleto') status = 'Cursado parcialmente';
+          let degree = edu.degree;
+          if (degree.includes('Cibersegurança') && !degree.includes('(em andamento)')) {
+            degree = 'Tecnólogo em Cibersegurança (em andamento)';
+          }
+          let institution = edu.institution;
+          if (institution.includes('UniAteneu') || institution.includes('Centro Universitário')) {
+            institution = 'Uniasselvi';
+          }
+          return { ...edu, status, degree, institution };
+        });
+        localStorage.setItem('educations', JSON.stringify(migrated));
+        return migrated;
       } catch (e) {
         console.error('Error parsing educations from localStorage:', e);
       }
@@ -229,6 +244,9 @@ export default function App() {
   const handleDownloadPdf = () => {
     setIsPrintMode(true);
     window.scrollTo({ top: 0, behavior: 'instant' });
+    setTimeout(() => {
+      window.print();
+    }, 250);
   };
 
   // If Print View is requested, render isolated Print Mode
@@ -303,7 +321,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="relative z-10">
+      <main className="relative z-10 print:hidden">
         
         {/* Hero & Profile Section */}
         <section id="inicio" className="pt-20 pb-4 sm:pt-24 md:pt-28 px-4 sm:px-6 max-w-[1100px] mx-auto">
@@ -588,6 +606,20 @@ export default function App() {
         >
           <Phone className="w-6 h-6 text-white" strokeWidth={2.2} aria-hidden="true" />
         </a>
+      </div>
+
+      {/* Fallback de impressão nativa: se o usuário pressionar Ctrl+P do navegador no site, sempre imprime o PrintResume */}
+      <div className="hidden print:block">
+        <PrintResume 
+          onBackClick={() => setIsPrintMode(false)}
+          personalInfo={personalInfo}
+          experiences={experiences}
+          skills={skills}
+          certifications={certifications}
+          educations={educations}
+          projects={projects}
+          showPhoto={false}
+        />
       </div>
 
     </div>
