@@ -1,0 +1,8 @@
+{
+  "name": "novo curriculo do claude",
+  "description": "Portfólio e currículo online interativo de Samuel Victor da Silva Nobre, especialista em Suporte Técnico N1/N2, Redes e Infraestrutura de TI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

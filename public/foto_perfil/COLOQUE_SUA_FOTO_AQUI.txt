@@ -1,0 +1,4 @@
+Olá! Coloque o arquivo da sua foto de perfil nesta pasta.
+Por padrão, o sistema está configurado para ler o arquivo "/foto_perfil/samuel.png".
+Se você salvar sua foto com o nome "samuel.png" nesta pasta, ela aparecerá automaticamente no currículo!
+Caso use outro nome ou formato (como .jpg ou .jpeg), você pode alterar o nome do arquivo no painel de administração (Acesso Restrito) ou no arquivo "/src/data.ts" na propriedade "imageUrl".

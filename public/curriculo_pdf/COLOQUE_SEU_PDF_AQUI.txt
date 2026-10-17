@@ -1,0 +1,4 @@
+Olá! Coloque o seu currículo em formato PDF nesta pasta.
+Por padrão, o sistema está configurado para ler o arquivo "/curriculo_pdf/curriculo.pdf".
+Se você salvar seu currículo com o nome "curriculo.pdf" nesta pasta, ao clicar em "Baixar Currículo PDF", ele fará o download direto deste arquivo!
+Caso use outro nome de arquivo, você pode alterar no painel de administração (Acesso Restrito) ou no arquivo "/src/data.ts" na propriedade "cvPdfUrl".
