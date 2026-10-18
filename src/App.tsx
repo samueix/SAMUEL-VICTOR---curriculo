@@ -577,7 +577,7 @@ export default function App() {
 
       </main>
 
-      {/* 8) RODAPÉ E CONTATO: rodapé em bloco escuro sólido (#1B2430) com texto claro, frase grande de chamada e botão do WhatsApp em coral #E8590C. Sem bloco verde-água grande. */}
+      {/* 8) RODAPÉ E CONTATO: rodapé em bloco escuro sólido (#1B2430) com texto claro, frase grande de chamada e botão do WhatsApp em coral #C2410C. Sem bloco verde-água grande. */}
       <footer className="bg-[#1B2430] text-[#FFFBF2] py-14 px-4 sm:px-6 relative z-10 no-print">
         <div className="max-w-[1100px] mx-auto">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-10 border-b border-[#FFFBF2]/15">
@@ -599,7 +599,7 @@ export default function App() {
                 href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-7 py-4 bg-[#E8590C] hover:bg-[#D34F0A] text-white font-bold text-sm sm:text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
+                className="px-7 py-4 bg-[#C2410C] hover:bg-[#9A3412] text-white font-bold text-sm sm:text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
               >
                 <Phone className="w-5 h-5 text-white" strokeWidth={2.2} aria-hidden="true" />
                 <span>Iniciar Conversa no WhatsApp</span>
@@ -648,13 +648,13 @@ export default function App() {
           </button>
         )}
 
-        {/* Floating WhatsApp Quick-Connect em Coral #E8590C */}
+        {/* Floating WhatsApp Quick-Connect em Coral #C2410C */}
         <a
           href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Entrar em contato via WhatsApp"
-          className="w-13 h-13 bg-[#E8590C] hover:bg-[#D34F0A] text-white rounded-full flex items-center justify-center transition-all hover:-translate-y-1 cursor-pointer shadow-lg"
+          className="w-13 h-13 bg-[#C2410C] hover:bg-[#9A3412] text-white rounded-full flex items-center justify-center transition-all hover:-translate-y-1 cursor-pointer shadow-lg"
           title="Falar pelo WhatsApp"
         >
           <Phone className="w-6 h-6 text-white" strokeWidth={2.2} aria-hidden="true" />

@@ -19,8 +19,8 @@
   --color-brand-teal-hover: #0C5F58;
 
   /* Cores de apoio pontuais */
-  --color-brand-coral: #E8590C;
-  --color-brand-coral-hover: #D34F0A;
+  --color-brand-coral: #C2410C;
+  --color-brand-coral-hover: #9A3412;
   --color-brand-yellow: #FFC940;
 
   --radius-card: 12px;
@@ -33,7 +33,7 @@
   --color-text-secondary: #4A5565;
   --color-border: #E6E1D6;
   --color-teal: #0F766E;
-  --color-coral: #E8590C;
+  --color-coral: #C2410C;
   --color-yellow: #FFC940;
 }
 

@@ -106,9 +106,9 @@ export default function ExperienceTimeline({ experiences }: ExperienceTimelinePr
                       {exp.role}
                     </h3>
 
-                    {/* Selo Atual em Coral #E8590C */}
+                    {/* Selo Atual em Coral #C2410C */}
                     {current && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#E8590C] text-white font-sans text-xs font-bold inline-flex items-center gap-1.5 shadow-sm">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#C2410C] text-white font-sans text-xs font-bold inline-flex items-center gap-1.5 shadow-sm">
                         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
                         Atual
                       </span>

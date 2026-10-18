@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Lock, 
@@ -14,11 +14,18 @@ import {
   KeyRound,
   Briefcase,
   Share2,
-  Camera
+  Camera,
+  Clock,
+  Award,
+  CheckSquare
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { PersonalInfo, Experience, Skill, Certification, Education, Message } from '../types';
+import { PersonalInfo } from '../types';
 import CoverLetterGenerator from './CoverLetterGenerator';
+import JobApplicationsTracker from './JobApplicationsTracker';
+import JobFollowUps from './JobFollowUps';
+import StarStories from './StarStories';
+import InterviewPrep from './InterviewPrep';
 
 interface AdminPanelProps {
   isOpen?: boolean;
@@ -33,10 +40,39 @@ export default function AdminPanel({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'cartas' | 'curriculo' | 'qrcode' | 'mensagens' | 'ats'>('cartas');
+  const [activeTab, setActiveTab] = useState<
+    'candidaturas' | 'acompanhamentos' | 'star' | 'entrevistas' | 'cartas' | 'curriculo' | 'qrcode' | 'mensagens' | 'ats'
+  >('candidaturas');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
   const [copiedAts, setCopiedAts] = useState(false);
+  const [dueFollowUpsCount, setDueFollowUpsCount] = useState(0);
+
+  // Monitora candidaturas que atingiram 5 dias para exibir badge
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('jobtracker_applications');
+      if (saved) {
+        const apps = JSON.parse(saved);
+        if (Array.isArray(apps)) {
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const count = apps.filter((a: any) => {
+            if (a.status !== 'Enviado') return false;
+            const refDate = a.lastFollowUpDate || a.sentDate;
+            if (!refDate) return false;
+            const [y, m, d] = refDate.split('-').map(Number);
+            const target = new Date(y, m - 1, d);
+            const daysAgo = Math.max(0, Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)));
+            return daysAgo >= 5;
+          }).length;
+          setDueFollowUpsCount(count);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [activeTab]);
 
   const websiteUrl = personalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/';
 
@@ -168,7 +204,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                     className="w-full px-4 py-2.5 rounded-[8px] bg-[#FFFBF2] border border-[#E6E1D6] text-sm text-[#1B2430] focus:outline-none focus:border-[#0F766E] transition-colors"
                   />
                   {authError && (
-                    <p className="text-xs text-[#E8590C] font-semibold mt-1.5">
+                    <p className="text-xs text-[#C2410C] font-semibold mt-1.5">
                       Senha incorreta. Tente novamente.
                     </p>
                   )}
@@ -188,67 +224,140 @@ ${personalInfo.phone} | ${personalInfo.email}`
               {/* Navigation Tabs */}
               <div className="flex flex-wrap gap-2 border-b border-[#E6E1D6] pb-3">
                 <button
+                  onClick={() => setActiveTab('candidaturas')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'candidaturas'
+                      ? 'bg-[#0F766E] text-white shadow-sm'
+                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5" />
+                  <span>Candidaturas</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('acompanhamentos')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 relative ${
+                    activeTab === 'acompanhamentos'
+                      ? 'bg-[#0F766E] text-white shadow-sm'
+                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Acompanhamentos</span>
+                  {dueFollowUpsCount > 0 && (
+                    <span className="px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[10px] font-bold font-mono">
+                      {dueFollowUpsCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('star')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'star'
+                      ? 'bg-[#0F766E] text-white shadow-sm'
+                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
+                  }`}
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>Histórias STAR</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('entrevistas')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'entrevistas'
+                      ? 'bg-[#0F766E] text-white shadow-sm'
+                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
+                  }`}
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>Checklist Entrevistas</span>
+                </button>
+
+                <button
                   onClick={() => setActiveTab('cartas')}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'cartas'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-3.5 h-3.5" />
                   <span>Cartas de Apresentação</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('curriculo')}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'curriculo'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <Printer className="w-4 h-4" />
+                  <Printer className="w-3.5 h-3.5" />
                   <span>Currículo & Impressão</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('qrcode')}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'qrcode'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <QrCode className="w-4 h-4" />
-                  <span>QR Code do Portfólio</span>
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>QR Code</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('mensagens')}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'mensagens'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Abordagem de Recrutadores</span>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Abordagem</span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('ats')}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     activeTab === 'ats'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <Briefcase className="w-4 h-4" />
+                  <Sparkles className="w-3.5 h-3.5" />
                   <span>Palavras-chave ATS</span>
                 </button>
               </div>
 
-              {/* Tab 1: Gerador de Cartas de Apresentação */}
+              {/* Novas Ferramentas: 1) Candidaturas */}
+              {activeTab === 'candidaturas' && (
+                <JobApplicationsTracker />
+              )}
+
+              {/* Novas Ferramentas: 2) Acompanhamentos (Follow-up) */}
+              {activeTab === 'acompanhamentos' && (
+                <JobFollowUps personalInfo={personalInfo} />
+              )}
+
+              {/* Novas Ferramentas: 3) Histórias STAR */}
+              {activeTab === 'star' && (
+                <StarStories />
+              )}
+
+              {/* Novas Ferramentas: 4) Checklist & Entrevistas */}
+              {activeTab === 'entrevistas' && (
+                <InterviewPrep />
+              )}
+
+              {/* Tab Existente: Gerador de Cartas de Apresentação */}
               {activeTab === 'cartas' && (
                 <div>
                   <CoverLetterGenerator personalInfo={personalInfo} />

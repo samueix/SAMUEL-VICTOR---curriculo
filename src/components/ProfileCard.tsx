@@ -187,13 +187,13 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
             </span>
           </div>
 
-          {/* Action Buttons: WhatsApp in Coral #E8590C & PDF in White with Border */}
+          {/* Action Buttons: WhatsApp in Coral #C2410C & PDF in White with Border */}
           <div className="flex flex-wrap items-center gap-4 mt-8 no-print">
             <a 
               href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-7 py-3.5 bg-[#E8590C] hover:bg-[#D34F0A] text-white font-bold text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-[2px_2px_0px_#1B2430]"
+              className="px-7 py-3.5 bg-[#C2410C] hover:bg-[#9A3412] text-white font-bold text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-[2px_2px_0px_#1B2430]"
             >
               <Phone className="w-4 h-4 text-white" strokeWidth={2.2} aria-hidden="true" />
               <span>Chamar no WhatsApp</span>
@@ -224,7 +224,7 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
               <img 
                 src={personalInfo.imageUrl || "/foto_perfil/samuel.png"} 
                 alt={personalInfo.fullName}
-                className="w-full h-full object-cover object-top brightness-[1.18] contrast-[1.02] saturate-[1.04] transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover object-top contrast-[1.02] transition-transform duration-300 hover:scale-105"
                 onError={() => setImageError(true)}
               />
             ) : (

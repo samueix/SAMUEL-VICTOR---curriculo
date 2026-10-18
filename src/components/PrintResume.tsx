@@ -187,7 +187,7 @@ export default function PrintResume({
                 <img 
                   src={personalInfo.imageUrl || "/foto_perfil/samuel.png"} 
                   alt={personalInfo.fullName}
-                  className="w-full h-full object-cover object-top filter grayscale contrast-105 brightness-110"
+                  className="w-full h-full object-cover object-top filter grayscale contrast-105"
                 />
               </div>
             </div>
