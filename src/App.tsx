@@ -27,6 +27,7 @@ import InteractiveContact from './components/InteractiveContact';
 import PrintResume from './components/PrintResume';
 import AdminPanel from './components/AdminPanel';
 import ProjectsSection from './components/ProjectsSection';
+import { trackEvent, checkAndUpdateOwnerMode } from './services/tracker';
 
 import { 
   personalInfo as defaultPersonalInfo,
@@ -237,11 +238,18 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Rastreamento silencioso de acesso e validação do Modo Dono (?owner=1 ativa / ?owner=0 desativa)
+  useEffect(() => {
+    checkAndUpdateOwnerMode();
+    trackEvent('acesso', 'Acesso inicial ao portfólio');
+  }, []);
+
   // Atalho oculto para o Kit do Candidato (#admin na URL ou Alt+A no teclado)
   useEffect(() => {
     const checkHash = () => {
       if (window.location.hash === '#admin' || window.location.search.includes('admin=true')) {
         setIsAdminMode(true);
+        trackEvent('abrir_admin', 'Tentativa de abertura via hash #admin');
       }
     };
     checkHash();
@@ -250,7 +258,13 @@ export default function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.altKey && (e.key === 'a' || e.key === 'A')) || (e.ctrlKey && e.shiftKey && (e.key === 'a' || e.key === 'A'))) {
         e.preventDefault();
-        setIsAdminMode(prev => !prev);
+        setIsAdminMode(prev => {
+          const next = !prev;
+          if (next) {
+            trackEvent('abrir_admin', 'Tentativa de abertura via teclado Alt+A');
+          }
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -271,6 +285,7 @@ export default function App() {
       const next = prev + 1;
       if (next >= 3) {
         setIsAdminMode(true);
+        trackEvent('abrir_admin', 'Tentativa de abertura via toque triplo mobile');
         return 0;
       }
       if (tapTimeoutRef.current) window.clearTimeout(tapTimeoutRef.current);
@@ -284,6 +299,7 @@ export default function App() {
   const handleTouchStart = () => {
     longPressTimeoutRef.current = window.setTimeout(() => {
       setIsAdminMode(true);
+      trackEvent('abrir_admin', 'Tentativa de abertura via toque longo mobile');
     }, 1200);
   };
 
@@ -302,6 +318,7 @@ export default function App() {
   };
 
   const handleDownloadPdf = () => {
+    trackEvent('baixar_pdf', 'Download/Impressão via botão Baixar Currículo PDF');
     setIsPrintMode(true);
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(() => {
@@ -599,6 +616,7 @@ export default function App() {
                 href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackEvent('clique_whatsapp', 'Botão Rodapé: Iniciar Conversa no WhatsApp')}
                 className="px-7 py-4 bg-[#C2410C] hover:bg-[#9A3412] text-white font-bold text-sm sm:text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-md"
               >
                 <Phone className="w-5 h-5 text-white" strokeWidth={2.2} aria-hidden="true" />
@@ -607,6 +625,7 @@ export default function App() {
 
               <a
                 href={`mailto:${personalInfo.email}`}
+                onClick={() => trackEvent('clique_email', 'Botão Rodapé: Enviar E-mail Direto')}
                 className="px-6 py-4 bg-[#FFFFFF] hover:bg-[#F1EEE6] text-[#1B2430] font-bold text-sm sm:text-base rounded-full inline-flex items-center gap-2 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer border border-[#E6E1D6]"
               >
                 <FileText className="w-5 h-5 text-[#1B2430]" strokeWidth={2} aria-hidden="true" />
@@ -626,9 +645,25 @@ export default function App() {
               © 2026 {personalInfo.fullName} • Infraestrutura, Redes & Operações de TI
             </p>
             <div className="flex items-center gap-4">
-              <a href={personalInfo.linkedinUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F766E] transition-colors font-bold">LinkedIn</a>
+              <a 
+                href={personalInfo.linkedinUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => trackEvent('clique_linkedin', 'Link Rodapé: LinkedIn')}
+                className="hover:text-[#0F766E] transition-colors font-bold"
+              >
+                LinkedIn
+              </a>
               <span>•</span>
-              <a href={personalInfo.githubUrl} target="_blank" rel="noopener noreferrer" className="hover:text-[#0F766E] transition-colors font-bold">GitHub</a>
+              <a 
+                href={personalInfo.githubUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => trackEvent('clique_github', 'Link Rodapé: GitHub')}
+                className="hover:text-[#0F766E] transition-colors font-bold"
+              >
+                GitHub
+              </a>
             </div>
           </div>
         </div>
@@ -653,6 +688,7 @@ export default function App() {
           href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('clique_whatsapp', 'Botão Flutuante: WhatsApp')}
           aria-label="Entrar em contato via WhatsApp"
           className="w-13 h-13 bg-[#C2410C] hover:bg-[#9A3412] text-white rounded-full flex items-center justify-center transition-all hover:-translate-y-1 cursor-pointer shadow-lg"
           title="Falar pelo WhatsApp"

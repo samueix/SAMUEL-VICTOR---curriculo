@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Printer } from 'lucide-react';
+import { trackEvent } from '../services/tracker';
 
 interface HeaderProps {
   activeSection: string;
@@ -114,6 +115,7 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
                 if (isPrintMode) {
                   setIsPrintMode(false);
                 } else {
+                  trackEvent('imprimir_curriculo', 'Botão Versão PDF no Header (Desktop)');
                   setIsPrintMode(true);
                   window.scrollTo({ top: 0, behavior: 'instant' });
                   setTimeout(() => {
@@ -142,6 +144,7 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
               if (isPrintMode) {
                 setIsPrintMode(false);
               } else {
+                trackEvent('imprimir_curriculo', 'Botão Versão PDF no Header (Mobile)');
                 setIsPrintMode(true);
                 window.scrollTo({ top: 0, behavior: 'instant' });
                 setTimeout(() => {

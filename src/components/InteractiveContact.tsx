@@ -2,6 +2,7 @@ import React from 'react';
 import { Mail, Phone, Linkedin, MapPin, ArrowUpRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { PersonalInfo, Message } from '../types';
+import { trackEvent } from '../services/tracker';
 
 interface InteractiveContactProps {
   personalInfo: PersonalInfo;
@@ -25,9 +26,11 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
       title: 'WhatsApp Oficial',
       value: personalInfo.phone,
       link: getFormattedWhatsappUrl(personalInfo.whatsappUrl),
+      telLink: `tel:${personalInfo.phone.replace(/[^\d+]/g, '')}`,
       icon: <Phone className="w-5 h-5 text-[#0F766E]" strokeWidth={2.2} aria-hidden="true" />,
       sub: 'Abrir conversa direta imediata',
-      badge: 'Contato Principal'
+      badge: 'Contato Principal',
+      eventTipo: 'clique_whatsapp' as const
     },
     {
       title: 'E-mail',
@@ -35,7 +38,8 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
       link: `mailto:${personalInfo.email}`,
       icon: <Mail className="w-5 h-5 text-[#0F766E]" strokeWidth={2.2} aria-hidden="true" />,
       sub: 'Envio de propostas e oportunidades',
-      badge: 'Resposta Rápida'
+      badge: 'Resposta Rápida',
+      eventTipo: 'clique_email' as const
     },
     {
       title: 'LinkedIn Oficial',
@@ -43,7 +47,8 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
       link: personalInfo.linkedinUrl,
       icon: <Linkedin className="w-5 h-5 text-[#0F766E]" strokeWidth={2.2} aria-hidden="true" />,
       sub: 'Conexão e recomendações técnicas',
-      badge: 'Rede Profissional'
+      badge: 'Rede Profissional',
+      eventTipo: 'clique_linkedin' as const
     },
     {
       title: 'Localização & Região',
@@ -51,7 +56,8 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
       link: '#',
       icon: <MapPin className="w-5 h-5 text-[#0F766E]" strokeWidth={2.2} aria-hidden="true" />,
       sub: 'Presencial / Híbrido / Remoto',
-      badge: 'Disponível Agora'
+      badge: 'Disponível Agora',
+      eventTipo: null
     }
   ];
 
@@ -68,6 +74,11 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
               href={card.link}
               target={isInteractive ? "_blank" : undefined}
               rel="noopener noreferrer"
+              onClick={() => {
+                if (card.eventTipo) {
+                  trackEvent(card.eventTipo, `Card de Contato: ${card.title}`);
+                }
+              }}
               initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
               whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -100,6 +111,24 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
                 <span className="text-xs text-[#4A5565] font-medium block">
                   {card.sub}
                 </span>
+
+                {card.telLink && (
+                  <div className="mt-2 pt-2 border-t border-[#F1EEE6]">
+                    <span
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        trackEvent('clique_telefone', 'Card Contato: Ligação direta no Telefone');
+                        window.location.href = card.telLink!;
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] hover:underline cursor-pointer"
+                      title="Ligar para o número de telefone"
+                    >
+                      <Phone className="w-3 h-3" />
+                      Ligar para o número
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-5 pt-3 border-t border-[#E6E1D6] flex items-center justify-between">

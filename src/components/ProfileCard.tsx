@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, MapPin, Briefcase, Calendar, Download, Bike } from 'lucide-react';
 import { PersonalInfo } from '../types';
+import { trackEvent } from '../services/tracker';
 
 interface ProfileCardProps {
   personalInfo: PersonalInfo;
@@ -193,6 +194,7 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
               href={getFormattedWhatsappUrl(personalInfo.whatsappUrl)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('clique_whatsapp', 'Botão Principal: Chamar no WhatsApp')}
               className="px-7 py-3.5 bg-[#C2410C] hover:bg-[#9A3412] text-white font-bold text-base rounded-full inline-flex items-center gap-2.5 transition-transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer shadow-[2px_2px_0px_#1B2430]"
             >
               <Phone className="w-4 h-4 text-white" strokeWidth={2.2} aria-hidden="true" />

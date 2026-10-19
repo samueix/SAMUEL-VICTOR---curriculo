@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Printer, ArrowLeft, Camera, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PersonalInfo, Experience, Skill, Certification, Education, Project } from '../types';
+import { trackEvent } from '../services/tracker';
 
 interface PrintResumeProps {
   onBackClick: () => void;
@@ -33,6 +34,7 @@ export default function PrintResume({
   const displayWebsite = websiteUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
 
   const handlePrint = () => {
+    trackEvent('imprimir_curriculo', 'Botão Imprimir Currículo em PrintResume');
     window.print();
   };
 
@@ -207,19 +209,40 @@ export default function PrintResume({
             {/* Quick Contacts: 2 linhas organizadas, sem nenhum separador "•" sobrando no final */}
             <div className="mt-2 space-y-0.5 text-[10.5px] font-mono text-[#5B5E62]">
               <div className="flex flex-wrap items-center gap-x-2.5 justify-center sm:justify-start print:justify-start">
-                <span>{personalInfo.email}</span>
+                <a 
+                  href={`mailto:${personalInfo.email}`}
+                  onClick={() => trackEvent('clique_email', 'Cabeçalho PrintResume: E-mail')}
+                  className="hover:text-[#0F766E] hover:underline cursor-pointer"
+                >
+                  {personalInfo.email}
+                </a>
                 <span className="text-[#0F766E] font-bold select-none">•</span>
-                <span>{personalInfo.phone}</span>
+                <a 
+                  href={`tel:${personalInfo.phone.replace(/[^\d+]/g, '')}`}
+                  onClick={() => trackEvent('clique_telefone', 'Cabeçalho PrintResume: Telefone')}
+                  className="hover:text-[#0F766E] hover:underline cursor-pointer"
+                >
+                  {personalInfo.phone}
+                </a>
                 <span className="text-[#0F766E] font-bold select-none">•</span>
                 <span>{personalInfo.location}</span>
               </div>
               <div className="flex flex-wrap items-center gap-x-2.5 justify-center sm:justify-start print:justify-start">
-                <span>{personalInfo.linkedinUrl ? personalInfo.linkedinUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '') : 'linkedin.com'}</span>
+                <a 
+                  href={personalInfo.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent('clique_linkedin', 'Cabeçalho PrintResume: LinkedIn')}
+                  className="hover:text-[#0F766E] hover:underline cursor-pointer"
+                >
+                  {personalInfo.linkedinUrl ? personalInfo.linkedinUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '') : 'linkedin.com'}
+                </a>
                 <span className="text-[#0F766E] font-bold select-none">•</span>
                 <a 
                   href={personalInfo.githubUrl || 'https://github.com/samueix'}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackEvent('clique_github', 'Cabeçalho PrintResume: GitHub')}
                   className="text-[#0F766E] font-medium hover:underline"
                 >
                   github.com/samueix

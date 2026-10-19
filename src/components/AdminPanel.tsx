@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PersonalInfo } from '../types';
+import { trackEvent } from '../services/tracker';
 import CoverLetterGenerator from './CoverLetterGenerator';
 import JobApplicationsTracker from './JobApplicationsTracker';
 import JobFollowUps from './JobFollowUps';
@@ -40,6 +41,10 @@ export default function AdminPanel({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
+
+  useEffect(() => {
+    trackEvent('abrir_admin', 'Painel Administrativo exibido na tela');
+  }, []);
   const [activeTab, setActiveTab] = useState<
     'candidaturas' | 'acompanhamentos' | 'star' | 'entrevistas' | 'cartas' | 'curriculo' | 'qrcode' | 'mensagens' | 'ats'
   >('candidaturas');
@@ -81,8 +86,10 @@ export default function AdminPanel({
     if (password === '075561@Sam') {
       setIsAuthenticated(true);
       setAuthError(false);
+      trackEvent('abrir_admin', 'Autenticação bem-sucedida no Painel Admin');
     } else {
       setAuthError(true);
+      trackEvent('abrir_admin', 'Tentativa de login no Admin com senha inválida');
     }
   };
 
@@ -378,6 +385,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                     <div className="flex flex-wrap gap-3 pt-2">
                       <button
                         onClick={() => {
+                          trackEvent('imprimir_curriculo', 'Botão Imprimir / Salvar PDF dentro do Admin');
                           onClose();
                           window.scrollTo({ top: 0, behavior: 'instant' });
                           setTimeout(() => {
