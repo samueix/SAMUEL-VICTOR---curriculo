@@ -11,8 +11,8 @@ const telegramTimestamps = [];
 // Controle de taxa para erros de admin: máximo 10 erros por 10 minutos por instância
 const adminErrorTimestamps = [];
 
-// Deduplicação por (sid + event)
-const seenEvents = new Set();
+// Deduplicação com TTL por (sid + event)
+const seenEvents = new Map();
 
 const ALLOWED_EVENTS = [
   'acesso',
@@ -70,29 +70,36 @@ function safeCompare(a, b) {
 function formatTelegramMessage(reg) {
   const lines = [];
   lines.push(TITULOS[reg.event] || `🔔 AÇÃO: ${reg.event.toUpperCase()}`);
-  lines.push(`Horário de Fortaleza: ${reg.quandoFortaleza}`);
+  lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza}`);
   if (reg.ref || reg.utm) {
-    lines.push(`Etiqueta/UTM: ${[reg.ref, reg.utm].filter(Boolean).join(' | ')}`);
+    lines.push(`🏷️ Etiqueta/UTM: ${[reg.ref, reg.utm].filter(Boolean).join(' | ')}`);
   }
-  lines.push(`Origem: ${reg.referrer || 'Acesso Direto'}`);
+  lines.push(`🔗 Origem: ${reg.referrer || 'Acesso Direto'}`);
   const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
-  lines.push(`Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
-  lines.push(`Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser} ${reg.browserMajor}`.trim());
-  let fusoLine = `Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
+  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
+  
+  let deviceEmoji = '💻';
+  if (reg.device === 'celular') deviceEmoji = '📱';
+  else if (reg.device === 'tablet') deviceEmoji = '📟';
+  lines.push(`${deviceEmoji} Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser} ${reg.browserMajor}`.trim());
+
+  let fusoLine = `🌐 Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
   if (reg.tzDiverge) {
     fusoLine += ' ⚠️ fuso diferente do país (possível VPN)';
   }
   lines.push(fusoLine);
+
   if (reg.conn) {
-    lines.push(`Tipo de conexão: ${reg.conn}`);
+    lines.push(`📶 Tipo de conexão: ${reg.conn}`);
   }
   if (reg.tema) {
-    lines.push(`Tema: ${reg.tema}`);
+    const temaDesc = reg.tema === 'escuro' ? '🌙 Escuro' : (reg.tema === 'claro' ? '☀️ Claro' : reg.tema);
+    lines.push(`🎨 Tema: ${temaDesc}`);
   }
   if (reg.event === 'resumo_visita') {
-    lines.push(`Duração: ${reg.duracaoS} segundos`);
-    lines.push(`Rolagem máxima: ${reg.scrollMax}%`);
-    lines.push(`Seções vistas: ${reg.secoes.length > 0 ? reg.secoes.join(', ') : 'Nenhuma'}`);
+    lines.push(`⏱️ Duração: ${reg.duracaoS} segundos`);
+    lines.push(`📜 Rolagem máxima: ${reg.scrollMax}%`);
+    lines.push(`👁️ Seções vistas: ${reg.secoes.length > 0 ? reg.secoes.join(', ') : 'Nenhuma'}`);
   }
   return lines.join('\n');
 }
@@ -197,9 +204,13 @@ export default async function handler(req, res) {
     const origin = req.headers['origin'] || '';
     const isAllowedOrigin = !origin || 
       origin === 'https://samuel-victor-da-silva-nobre.vercel.app' ||
+      origin.includes('vercel.app') ||
       origin.includes('localhost') ||
       origin.includes('127.0.0.1') ||
-      origin.includes('.run.app');
+      origin.includes('.run.app') ||
+      origin.includes('.google.com') ||
+      origin.includes('.googleusercontent.com') ||
+      origin.includes('.web.app');
 
     if (!isAllowedOrigin) {
       res.statusCode = 204;
@@ -207,19 +218,16 @@ export default async function handler(req, res) {
     }
 
     const secFetchSite = req.headers['sec-fetch-site'];
-    if (secFetchSite && secFetchSite !== 'same-origin') {
+    // sec-fetch-site só é bloqueado se for explicitamente cross-site de uma origem externa não autorizada
+    if (secFetchSite && secFetchSite === 'cross-site' && !isAllowedOrigin) {
       res.statusCode = 204;
       return res.end();
     }
 
     const acceptLanguage = req.headers['accept-language'];
-    if (!acceptLanguage) {
-      res.statusCode = 204;
-      return res.end();
-    }
-
+    // Ignorar robôs conhecidos por User-Agent
     const userAgent = req.headers['user-agent'] || '';
-    const isBot = /bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|linkedinbot|slurp|headless|lighthouse|pingdom|curl|python|axios|node-fetch|go-http|httpclient/i.test(userAgent);
+    const isBot = /bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|linkedinbot|slurp|headless|lighthouse|pingdom|python|node-fetch|go-http|httpclient/i.test(userAgent);
     if (isBot) {
       res.statusCode = 204;
       return res.end();
@@ -244,17 +252,20 @@ export default async function handler(req, res) {
       return res.end();
     }
 
-    // 5. Deduplicação por (sid + event)
+    // 5. Deduplicação por (sid + event) - ignora se repetido em menos de 15 segundos
     const dedupeKey = `${sid}:${event}`;
-    if (seenEvents.has(dedupeKey)) {
+    const nowMs = Date.now();
+    const lastSeen = seenEvents.get(dedupeKey);
+    if (lastSeen && (nowMs - lastSeen < 15000)) {
       res.statusCode = 204;
       return res.end();
     }
-    seenEvents.add(dedupeKey);
-    if (seenEvents.size > 2000) {
-      const iter = seenEvents.values();
-      for (let i = 0; i < 500; i++) {
-        seenEvents.delete(iter.next().value);
+    seenEvents.set(dedupeKey, nowMs);
+    if (seenEvents.size > 1000) {
+      for (const [k, time] of seenEvents.entries()) {
+        if (nowMs - time > 60000) {
+          seenEvents.delete(k);
+        }
       }
     }
 

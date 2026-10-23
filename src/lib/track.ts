@@ -79,19 +79,11 @@ export function checkAndUpdateOwnerMode(): boolean {
 function shouldBlockTracking(): boolean {
   if (typeof window === 'undefined') return true;
   try {
-    // 1. Modo dono ativo
+    // 1. Modo dono ativo (?owner=1 ativa, ?owner=0 desativa)
     if (checkAndUpdateOwnerMode()) return true;
 
-    // 2. Modo de desenvolvimento local
-    if ((import.meta as any).env?.DEV) return true;
-
-    // 3. Preferências de privacidade (Do Not Track / Global Privacy Control)
-    if (navigator.doNotTrack === '1' || (window as any).doNotTrack === '1') return true;
-    if ((navigator as any).globalPrivacyControl === true) return true;
-
-    // 4. Robôs, crawlers e navegadores automatizados
+    // 2. Robôs, crawlers e navegadores automatizados
     if (navigator.webdriver) return true;
-    if (!navigator.language) return true;
     const ua = navigator.userAgent || '';
     if (/bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|linkedinbot|slurp|headless|lighthouse|pingdom/i.test(ua)) {
       return true;
@@ -273,13 +265,15 @@ function sendAcessoEvent() {
 
   try {
     const sessionAcessoKey = 'track_acesso_enviado';
-    if (sessionStorage.getItem(sessionAcessoKey)) {
+    const now = Date.now();
+    const lastSent = sessionStorage.getItem(sessionAcessoKey);
+    if (lastSent && (now - parseInt(lastSent, 10)) < 15000) {
       acessoEnviado = true;
       return;
     }
 
     acessoEnviado = true;
-    sessionStorage.setItem(sessionAcessoKey, '1');
+    sessionStorage.setItem(sessionAcessoKey, String(now));
 
     const payload = buildBasePayload('acesso');
     sendPayload(payload);
@@ -320,14 +314,17 @@ export function initTracker() {
 
   if (shouldBlockTracking()) return;
 
-  // 1. Contador de segundos com a aba visível
+  // 1. Dispara o evento de 'acesso' imediatamente no carregamento da página
+  sendAcessoEvent();
+
+  // 2. Contador de segundos com a aba visível
   setInterval(() => {
     if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
       visibleSeconds += 1;
     }
   }, 1000);
 
-  // 2. Medição da porcentagem máxima de rolagem
+  // 3. Medição da porcentagem máxima de rolagem
   const updateScrollMax = () => {
     try {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -343,7 +340,7 @@ export function initTracker() {
   };
   window.addEventListener('scroll', updateScrollMax, { passive: true });
 
-  // 3. Detecção de seções visíveis na viewport (IntersectionObserver)
+  // 4. Detecção de seções visíveis na viewport (IntersectionObserver)
   if ('IntersectionObserver' in window) {
     try {
       const observer = new IntersectionObserver((entries) => {
@@ -363,9 +360,7 @@ export function initTracker() {
     }
   }
 
-  // 4. Verificação de humano:
-  // Dispara 'acesso' após o 1º sinal humano (pointermove, touchstart, scroll, keydown)
-  // OU após 5s com a aba visível.
+  // 5. Garantia adicional por sinais de interação humana
   const handleHumanSignal = () => {
     sendAcessoEvent();
     removeHumanListeners();
@@ -383,15 +378,7 @@ export function initTracker() {
   window.addEventListener('scroll', handleHumanSignal, { once: true, passive: true });
   window.addEventListener('keydown', handleHumanSignal, { once: true, passive: true });
 
-  // Timeout de 5s se a aba estiver visível
-  setTimeout(() => {
-    if (document.visibilityState === 'visible') {
-      sendAcessoEvent();
-      removeHumanListeners();
-    }
-  }, 5000);
-
-  // 5. Envio de "resumo_visita" ao sair da página
+  // 6. Envio de "resumo_visita" ao sair da página
   const handlePageExit = () => {
     if (document.visibilityState === 'hidden') {
       sendResumoVisita();

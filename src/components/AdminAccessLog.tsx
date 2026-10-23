@@ -73,29 +73,36 @@ const TITULOS_TELEGRAM: Record<string, string> = {
 function formatTelegramText(reg: EventRecord): string {
   const lines: string[] = [];
   lines.push(TITULOS_TELEGRAM[reg.event] || `🔔 AÇÃO: ${String(reg.event).toUpperCase()}`);
-  lines.push(`Horário de Fortaleza: ${reg.quandoFortaleza || reg.quando}`);
+  lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza || reg.quando}`);
   if (reg.ref || reg.utm) {
-    lines.push(`Etiqueta/UTM: ${[reg.ref, reg.utm].filter(Boolean).join(' | ')}`);
+    lines.push(`🏷️ Etiqueta/UTM: ${[reg.ref, reg.utm].filter(Boolean).join(' | ')}`);
   }
-  lines.push(`Origem: ${reg.referrer || 'Acesso Direto'}`);
+  lines.push(`🔗 Origem: ${reg.referrer || 'Acesso Direto'}`);
   const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
-  lines.push(`Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
-  lines.push(`Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser || ''} ${reg.browserMajor || ''}`.trim());
-  let fusoLine = `Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
+  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
+  
+  let deviceEmoji = '💻';
+  if (reg.device === 'celular') deviceEmoji = '📱';
+  else if (reg.device === 'tablet') deviceEmoji = '📟';
+  lines.push(`${deviceEmoji} Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser || ''} ${reg.browserMajor || ''}`.trim());
+
+  let fusoLine = `🌐 Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
   if (reg.tzDiverge) {
     fusoLine += ' ⚠️ fuso diferente do país (possível VPN)';
   }
   lines.push(fusoLine);
+
   if (reg.conn) {
-    lines.push(`Tipo de conexão: ${reg.conn}`);
+    lines.push(`📶 Tipo de conexão: ${reg.conn}`);
   }
   if (reg.tema) {
-    lines.push(`Tema: ${reg.tema}`);
+    const temaDesc = reg.tema === 'escuro' ? '🌙 Escuro' : (reg.tema === 'claro' ? '☀️ Claro' : reg.tema);
+    lines.push(`🎨 Tema: ${temaDesc}`);
   }
   if (reg.event === 'resumo_visita') {
-    lines.push(`Duração: ${reg.duracaoS ?? 0} segundos`);
-    lines.push(`Rolagem máxima: ${reg.scrollMax ?? 0}%`);
-    lines.push(`Seções vistas: ${Array.isArray(reg.secoes) && reg.secoes.length > 0 ? reg.secoes.join(', ') : 'Nenhuma'}`);
+    lines.push(`⏱️ Duração: ${reg.duracaoS ?? 0} segundos`);
+    lines.push(`📜 Rolagem máxima: ${reg.scrollMax ?? 0}%`);
+    lines.push(`👁️ Seções vistas: ${Array.isArray(reg.secoes) && reg.secoes.length > 0 ? reg.secoes.join(', ') : 'Nenhuma'}`);
   }
   return lines.join('\n');
 }
