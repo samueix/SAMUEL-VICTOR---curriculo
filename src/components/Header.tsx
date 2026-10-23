@@ -116,6 +116,13 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
                   setIsPrintMode(false);
                 } else {
                   trackEvent('imprimir_curriculo', 'Botão Versão PDF no Header (Desktop)');
+                  const orig = document.title;
+                  document.title = 'Samuel Victor da Silva Nobre - Currículo';
+                  const restore = () => {
+                    document.title = orig;
+                    window.removeEventListener('afterprint', restore);
+                  };
+                  window.addEventListener('afterprint', restore);
                   setIsPrintMode(true);
                   window.scrollTo({ top: 0, behavior: 'instant' });
                   setTimeout(() => {
@@ -145,6 +152,13 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
                 setIsPrintMode(false);
               } else {
                 trackEvent('imprimir_curriculo', 'Botão Versão PDF no Header (Mobile)');
+                const orig = document.title;
+                document.title = 'Samuel Victor da Silva Nobre - Currículo';
+                const restore = () => {
+                  document.title = orig;
+                  window.removeEventListener('afterprint', restore);
+                };
+                window.addEventListener('afterprint', restore);
                 setIsPrintMode(true);
                 window.scrollTo({ top: 0, behavior: 'instant' });
                 setTimeout(() => {

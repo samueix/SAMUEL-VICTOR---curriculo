@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
-  Lock, 
   FileText, 
   Printer, 
   Download, 
@@ -12,72 +11,52 @@ import {
   Sparkles,
   MessageSquare,
   KeyRound,
-  Briefcase,
-  Share2,
-  Camera,
-  Clock,
-  Award,
-  CheckSquare
+  CheckSquare,
+  Activity,
+  Image,
+  CheckCircle2
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PersonalInfo } from '../types';
 import { trackEvent } from '../services/tracker';
 import CoverLetterGenerator from './CoverLetterGenerator';
-import JobApplicationsTracker from './JobApplicationsTracker';
-import JobFollowUps from './JobFollowUps';
-import StarStories from './StarStories';
 import InterviewPrep from './InterviewPrep';
+import AdminAccessLog from './AdminAccessLog';
 
 interface AdminPanelProps {
   isOpen?: boolean;
   personalInfo: PersonalInfo;
   onClose: () => void;
+  onPrintResume?: (withPhoto: boolean) => void;
 }
 
 export default function AdminPanel({
   personalInfo,
-  onClose
+  onClose,
+  onPrintResume
 }: AdminPanelProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
-
-  useEffect(() => {
-    trackEvent('abrir_admin', 'Painel Administrativo exibido na tela');
-  }, []);
   const [activeTab, setActiveTab] = useState<
-    'candidaturas' | 'acompanhamentos' | 'star' | 'entrevistas' | 'cartas' | 'curriculo' | 'qrcode' | 'mensagens' | 'ats'
-  >('candidaturas');
+    'acessos' | 'cartas' | 'curriculo' | 'qrcode' | 'mensagens' | 'ats' | 'entrevistas'
+  >('acessos');
+
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
   const [copiedAts, setCopiedAts] = useState(false);
-  const [dueFollowUpsCount, setDueFollowUpsCount] = useState(0);
+  const [resumePhotoChoice, setResumePhotoChoice] = useState<'sem_foto' | 'com_foto'>('sem_foto');
 
-  // Monitora candidaturas que atingiram 5 dias para exibir badge
   useEffect(() => {
+    trackEvent('abrir_admin', 'Painel Administrativo exibido na tela');
+    // Limpeza de chaves residuais de abas removidas
     try {
-      const saved = localStorage.getItem('jobtracker_applications');
-      if (saved) {
-        const apps = JSON.parse(saved);
-        if (Array.isArray(apps)) {
-          const now = new Date();
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          const count = apps.filter((a: any) => {
-            if (a.status !== 'Enviado') return false;
-            const refDate = a.lastFollowUpDate || a.sentDate;
-            if (!refDate) return false;
-            const [y, m, d] = refDate.split('-').map(Number);
-            const target = new Date(y, m - 1, d);
-            const daysAgo = Math.max(0, Math.floor((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)));
-            return daysAgo >= 5;
-          }).length;
-          setDueFollowUpsCount(count);
-        }
-      }
+      localStorage.removeItem('jobtracker_applications');
+      localStorage.removeItem('jobtracker_stories');
     } catch {
       // ignore
     }
-  }, [activeTab]);
+  }, []);
 
   const websiteUrl = personalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/';
 
@@ -171,7 +150,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                 Kit do Candidato & Ferramentas de Carreira
               </h3>
               <p className="text-xs text-[#4A5565] font-medium">
-                Recursos essenciais para processos seletivos e candidaturas
+                Recursos essenciais para processos seletivos e monitoramento
               </p>
             </div>
           </div>
@@ -197,7 +176,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                   Acesso aos Recursos de Carreira
                 </h4>
                 <p className="text-xs sm:text-sm text-[#4A5565] mt-1 font-medium">
-                  Digite sua senha para acessar geradores de cartas, modelos de abordagem e exportação de QR code.
+                  Digite sua senha para acessar o monitoramento de acessos, geradores de cartas, modelos de abordagem e impressão de currículo.
                 </p>
               </div>
 
@@ -221,7 +200,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                   type="submit"
                   className="w-full py-3 bg-[#0F766E] hover:bg-[#0C5F58] text-white font-bold text-sm rounded-[8px] transition-all cursor-pointer shadow-sm"
                 >
-                  Entrar no Kit do Candidato
+                  Entrar no Painel Admin
                 </button>
               </form>
             </div>
@@ -231,56 +210,15 @@ ${personalInfo.phone} | ${personalInfo.email}`
               {/* Navigation Tabs */}
               <div className="flex flex-wrap gap-2 border-b border-[#E6E1D6] pb-3">
                 <button
-                  onClick={() => setActiveTab('candidaturas')}
+                  onClick={() => setActiveTab('acessos')}
                   className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === 'candidaturas'
+                    activeTab === 'acessos'
                       ? 'bg-[#0F766E] text-white shadow-sm'
                       : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
                   }`}
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span>Candidaturas</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('acompanhamentos')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 relative ${
-                    activeTab === 'acompanhamentos'
-                      ? 'bg-[#0F766E] text-white shadow-sm'
-                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
-                  }`}
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>Acompanhamentos</span>
-                  {dueFollowUpsCount > 0 && (
-                    <span className="px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[10px] font-bold font-mono">
-                      {dueFollowUpsCount}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('star')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === 'star'
-                      ? 'bg-[#0F766E] text-white shadow-sm'
-                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
-                  }`}
-                >
-                  <Award className="w-3.5 h-3.5" />
-                  <span>Histórias STAR</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('entrevistas')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeTab === 'entrevistas'
-                      ? 'bg-[#0F766E] text-white shadow-sm'
-                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
-                  }`}
-                >
-                  <CheckSquare className="w-3.5 h-3.5" />
-                  <span>Checklist Entrevistas</span>
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>Acessos & Mensagens</span>
                 </button>
 
                 <button
@@ -328,7 +266,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                   }`}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Abordagem</span>
+                  <span>Abordagem Recrutadores</span>
                 </button>
 
                 <button
@@ -342,36 +280,33 @@ ${personalInfo.phone} | ${personalInfo.email}`
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Palavras-chave ATS</span>
                 </button>
+
+                <button
+                  onClick={() => setActiveTab('entrevistas')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === 'entrevistas'
+                      ? 'bg-[#0F766E] text-white shadow-sm'
+                      : 'bg-[#FFFBF2] text-[#4A5565] hover:bg-[#F1EEE6] border border-[#E6E1D6]'
+                  }`}
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>Checklist Entrevistas</span>
+                </button>
               </div>
 
-              {/* Novas Ferramentas: 1) Candidaturas */}
-              {activeTab === 'candidaturas' && (
-                <JobApplicationsTracker />
+              {/* Tab 1: Nova Aba Acessos & Mensagens */}
+              {activeTab === 'acessos' && (
+                <AdminAccessLog />
               )}
 
-              {/* Novas Ferramentas: 2) Acompanhamentos (Follow-up) */}
-              {activeTab === 'acompanhamentos' && (
-                <JobFollowUps personalInfo={personalInfo} />
-              )}
-
-              {/* Novas Ferramentas: 3) Histórias STAR */}
-              {activeTab === 'star' && (
-                <StarStories />
-              )}
-
-              {/* Novas Ferramentas: 4) Checklist & Entrevistas */}
-              {activeTab === 'entrevistas' && (
-                <InterviewPrep />
-              )}
-
-              {/* Tab Existente: Gerador de Cartas de Apresentação */}
+              {/* Tab 2: Gerador de Cartas de Apresentação */}
               {activeTab === 'cartas' && (
                 <div>
                   <CoverLetterGenerator personalInfo={personalInfo} />
                 </div>
               )}
 
-              {/* Tab 2: Currículo & Impressão Rápida */}
+              {/* Tab 3: Currículo & Impressão Rápida com escolha de foto */}
               {activeTab === 'curriculo' && (
                 <div className="space-y-5">
                   <div className="bg-[#FFFBF2] border border-[#E6E1D6] p-5 rounded-[12px] space-y-4">
@@ -382,20 +317,84 @@ ${personalInfo.phone} | ${personalInfo.email}`
                       Gere o currículo oficial de 2 páginas no padrão A4 com margens de 12mm, tipografia limpa sem palavras coladas e layout em largura total.
                     </p>
 
+                    {/* Escolha do Formato com ou sem foto */}
+                    <div className="space-y-2 pt-1">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#1B2430] block">
+                        Opção de Foto no Cabeçalho do Currículo:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setResumePhotoChoice('sem_foto')}
+                          className={`p-3.5 rounded-[8px] border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            resumePhotoChoice === 'sem_foto'
+                              ? 'bg-white border-[#0F766E] shadow-xs'
+                              : 'bg-[#FAF9F5] border-[#E6E1D6] hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                              resumePhotoChoice === 'sem_foto' ? 'border-[#0F766E]' : 'border-[#D9D5CB]'
+                            }`}>
+                              {resumePhotoChoice === 'sem_foto' && <div className="w-2 h-2 rounded-full bg-[#0F766E]" />}
+                            </div>
+                            <span className="font-bold text-xs sm:text-sm text-[#1B2430]">
+                              Sem foto (padrão, melhor para ATS)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#4A5565] mt-1.5 pl-6 leading-relaxed">
+                            Formato limpo e universal para portais de vagas e sistemas automatizados de triagem ATS.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setResumePhotoChoice('com_foto')}
+                          className={`p-3.5 rounded-[8px] border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            resumePhotoChoice === 'com_foto'
+                              ? 'bg-white border-[#0F766E] shadow-xs'
+                              : 'bg-[#FAF9F5] border-[#E6E1D6] hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                              resumePhotoChoice === 'com_foto' ? 'border-[#0F766E]' : 'border-[#D9D5CB]'
+                            }`}>
+                              {resumePhotoChoice === 'com_foto' && <div className="w-2 h-2 rounded-full bg-[#0F766E]" />}
+                            </div>
+                            <span className="font-bold text-xs sm:text-sm text-[#1B2430]">
+                              Com foto (3x4 profissional)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#4A5565] mt-1.5 pl-6 leading-relaxed">
+                            Foto 3x4 (28x35mm) à esquerda do nome com cantos de 3px e QR Code à direita.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="flex flex-wrap gap-3 pt-2">
                       <button
                         onClick={() => {
-                          trackEvent('imprimir_curriculo', 'Botão Imprimir / Salvar PDF dentro do Admin');
-                          onClose();
-                          window.scrollTo({ top: 0, behavior: 'instant' });
-                          setTimeout(() => {
-                            window.print();
-                          }, 300);
+                          trackEvent('imprimir_curriculo', `Botão Imprimir dentro do Admin (${resumePhotoChoice})`);
+                          if (onPrintResume) {
+                            onPrintResume(resumePhotoChoice === 'com_foto');
+                          } else {
+                            onClose();
+                            window.scrollTo({ top: 0, behavior: 'instant' });
+                            setTimeout(() => {
+                              window.print();
+                            }, 300);
+                          }
                         }}
                         className="px-5 py-3 bg-[#0F766E] hover:bg-[#0C5F58] text-white rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-transform hover:-translate-y-0.5 cursor-pointer shadow-sm"
                       >
                         <Printer className="w-4 h-4" />
-                        <span>Imprimir / Salvar PDF (A4 Oficial)</span>
+                        <span>
+                          {resumePhotoChoice === 'com_foto'
+                            ? 'Imprimir / Salvar PDF (Com Foto 3x4)'
+                            : 'Imprimir / Salvar PDF (A4 Oficial Sem Foto)'}
+                        </span>
                       </button>
 
                       <a
@@ -413,13 +412,14 @@ ${personalInfo.phone} | ${personalInfo.email}`
                   <div className="p-4 bg-white border border-[#E6E1D6] rounded-[12px] text-xs font-mono text-[#5B5E62] space-y-1.5">
                     <p className="font-bold text-[#1B2430]">Dicas para envio em portais de vagas:</p>
                     <p>• Na janela de impressão do navegador, selecione <strong>"Salvar como PDF"</strong>.</p>
-                    <p>• Marque <strong>"Gráficos de segundo plano"</strong> para manter os marcadores coloridos.</p>
+                    <p>• Marque <strong>"Gráficos de segundo plano"</strong> para manter os marcadores e a foto nítidos.</p>
+                    <p>• O título sugerido do arquivo será <strong>"Samuel Victor da Silva Nobre - Currículo{resumePhotoChoice === 'com_foto' ? ' (com foto)' : ''}"</strong>.</p>
                     <p>• Tamanho do papel: <strong>A4</strong> | Margens: <strong>Padrão</strong>.</p>
                   </div>
                 </div>
               )}
 
-              {/* Tab 3: QR Code do Portfólio */}
+              {/* Tab 4: QR Code do Portfólio */}
               {activeTab === 'qrcode' && (
                 <div className="space-y-6">
                   <div className="bg-[#FFFBF2] border border-[#E6E1D6] p-6 rounded-[12px] flex flex-col md:flex-row items-center gap-6">
@@ -444,7 +444,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                       <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start pt-1">
                         <button
                           onClick={handleCopyLink}
-                          className="px-4 py-2 bg-[#0F766E] hover:bg-[#0C5F58] text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-transform hover:-translate-y-0.5 cursor-pointer shadow-sm"
+                          className="px-4 py-2 bg-white hover:bg-[#F1EEE6] text-[#0F766E] border border-[#0F766E] rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                         >
                           {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link do Portfólio'}</span>
@@ -455,66 +455,69 @@ ${personalInfo.phone} | ${personalInfo.email}`
                 </div>
               )}
 
-              {/* Tab 4: Abordagem de Recrutadores */}
+              {/* Tab 5: Modelos de Abordagem para Recrutadores */}
               {activeTab === 'mensagens' && (
                 <div className="space-y-4">
-                  <p className="text-xs sm:text-sm text-[#4A5565]">
-                    Modelos de mensagens profissionais prontas para copiar e enviar rapidamente pelo WhatsApp, LinkedIn ou E-mail:
+                  <p className="text-xs sm:text-sm text-[#4A5565] font-medium leading-relaxed">
+                    Copie mensagens prontas e objetivas para enviar a recrutadores e gerentes de TI, já configuradas com seu nome e link do portfólio.
                   </p>
 
                   <div className="space-y-4">
-                    {recruiterTemplates.map((item, idx) => (
-                      <div key={idx} className="bg-[#FFFBF2] border border-[#E6E1D6] p-4 rounded-[12px] space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h5 className="text-xs font-bold uppercase text-[#0F766E] tracking-wide font-mono">
-                            {item.title}
-                          </h5>
+                    {recruiterTemplates.map((template, idx) => (
+                      <div key={idx} className="bg-[#FFFBF2] border border-[#E6E1D6] p-4 sm:p-5 rounded-[12px] space-y-3">
+                        <div className="flex items-center justify-between gap-3 border-b border-[#E6E1D6] pb-2">
+                          <span className="font-bold text-xs sm:text-sm text-[#1B2430]">
+                            {template.title}
+                          </span>
                           <button
-                            onClick={() => handleCopyMessage(item.content, idx)}
-                            className="px-3 py-1 bg-[#FFFFFF] hover:bg-[#F1EEE6] border border-[#E6E1D6] rounded-full text-xs font-bold text-[#1B2430] flex items-center gap-1 transition-all cursor-pointer"
+                            onClick={() => handleCopyMessage(template.content, idx)}
+                            className="px-3 py-1 bg-white hover:bg-[#F1EEE6] text-[#0F766E] border border-[#0F766E] rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                           >
-                            {copiedMsgIdx === idx ? <Check className="w-3 h-3 text-[#0F766E]" /> : <Copy className="w-3 h-3 text-[#4A5565]" />}
-                            <span>{copiedMsgIdx === idx ? 'Copiado!' : 'Copiar Texto'}</span>
+                            {copiedMsgIdx === idx ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedMsgIdx === idx ? 'Copiado!' : 'Copiar'}</span>
                           </button>
                         </div>
-                        <pre className="text-xs font-sans text-[#1B2430] bg-white p-3 rounded-[8px] border border-[#E6E1D6] whitespace-pre-wrap leading-relaxed">
-                          {item.content}
-                        </pre>
+                        <p className="text-xs sm:text-sm text-[#4A5565] font-mono leading-relaxed whitespace-pre-line bg-white p-3 rounded-[8px] border border-[#E6E1D6]">
+                          {template.content}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Tab 5: Palavras-chave ATS */}
+              {/* Tab 6: Palavras-chave ATS */}
               {activeTab === 'ats' && (
                 <div className="space-y-4">
-                  <div className="bg-[#FFFBF2] border border-[#E6E1D6] p-5 rounded-[12px] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-[#1B2430] uppercase tracking-wide">
-                        Termos Técnicos & Palavras-chave para Filtros ATS (Gupy, Vagas, LinkedIn)
-                      </h4>
-                      <button
-                        onClick={handleCopyAts}
-                        className="px-4 py-2 bg-[#0F766E] hover:bg-[#0C5F58] text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-transform hover:-translate-y-0.5 cursor-pointer shadow-sm"
-                      >
-                        {copiedAts ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedAts ? 'Todas Copiadas!' : 'Copiar Todas'}</span>
-                      </button>
-                    </div>
-                    <p className="text-xs text-[#4A5565] leading-relaxed">
-                      Cole essas palavras-chave nos campos de "Habilidades" ou "Conhecimentos Técnicos" de cadastros de vagas para pontuar com máxima compatibilidade nos filtros automatizados de triagem:
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p className="text-xs sm:text-sm text-[#4A5565] font-medium leading-relaxed">
+                      Termos técnicos estratégicos mapeados para triagem automatizada (Applicant Tracking Systems):
                     </p>
+                    <button
+                      onClick={handleCopyAts}
+                      className="shrink-0 px-4 py-2 bg-[#0F766E] hover:bg-[#0C5F58] text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    >
+                      {copiedAts ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedAts ? 'Copiadas!' : 'Copiar Todas'}</span>
+                    </button>
+                  </div>
 
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {atsKeywords.map((kw, idx) => (
-                        <span key={idx} className="px-2.5 py-1 bg-white border border-[#E6E1D6] rounded-full text-xs font-mono text-[#1B2430]">
-                          {kw}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="p-4 bg-[#FFFBF2] border border-[#E6E1D6] rounded-[12px] flex flex-wrap gap-2">
+                    {atsKeywords.map((kw, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 bg-white border border-[#E6E1D6] rounded-full text-xs font-mono text-[#1B2430]"
+                      >
+                        {kw}
+                      </span>
+                    ))}
                   </div>
                 </div>
+              )}
+
+              {/* Tab 7: Checklist de Entrevistas Técnicas */}
+              {activeTab === 'entrevistas' && (
+                <InterviewPrep />
               )}
 
             </div>

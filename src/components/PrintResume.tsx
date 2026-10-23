@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Printer, ArrowLeft, Camera, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PersonalInfo, Experience, Skill, Certification, Education, Project } from '../types';
@@ -30,12 +30,52 @@ export default function PrintResume({
   const [localShowPhoto, setLocalShowPhoto] = useState(showPhoto);
   const [localShowQrCode, setLocalShowQrCode] = useState(true);
 
+  useEffect(() => {
+    setLocalShowPhoto(showPhoto);
+  }, [showPhoto]);
+
+  useEffect(() => {
+    const originalTitle = document.title;
+    const handleBefore = () => {
+      document.title = localShowPhoto
+        ? 'Samuel Victor da Silva Nobre - Currículo (com foto)'
+        : 'Samuel Victor da Silva Nobre - Currículo';
+    };
+    const handleAfter = () => {
+      document.title = originalTitle;
+    };
+    window.addEventListener('beforeprint', handleBefore);
+    window.addEventListener('afterprint', handleAfter);
+    return () => {
+      window.removeEventListener('beforeprint', handleBefore);
+      window.removeEventListener('afterprint', handleAfter);
+    };
+  }, [localShowPhoto]);
+
   const websiteUrl = personalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/';
   const displayWebsite = websiteUrl.replace(/(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '');
 
   const handlePrint = () => {
     trackEvent('imprimir_curriculo', 'Botão Imprimir Currículo em PrintResume');
+    const originalTitle = document.title;
+    const printTitle = localShowPhoto
+      ? 'Samuel Victor da Silva Nobre - Currículo (com foto)'
+      : 'Samuel Victor da Silva Nobre - Currículo';
+    document.title = printTitle;
+
+    const restore = () => {
+      document.title = originalTitle;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+
     window.print();
+
+    setTimeout(() => {
+      if (document.title === printTitle) {
+        document.title = originalTitle;
+      }
+    }, 1200);
   };
 
   return (
@@ -184,12 +224,16 @@ export default function PrintResume({
         {/* Top Header */}
         <div className="border-b border-[#17181A] pb-3 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:flex print:flex-row print:items-center print:justify-between print:gap-4 print:text-left print-break-inside-avoid">
           {localShowPhoto && (
-            <div className="shrink-0 flex justify-center print:shrink-0">
-              <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-[4px] overflow-hidden border border-[#17181A] bg-[#F5F3EE] print:w-20 print:h-20 print:rounded-[3px]">
+            <div className="shrink-0 flex justify-center print:shrink-0 self-center sm:self-auto">
+              <div 
+                className="w-[28mm] h-[35mm] rounded-[3px] overflow-hidden border border-[#17181A] bg-[#F5F3EE] shrink-0"
+                style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+              >
                 <img 
                   src={personalInfo.imageUrl || "/foto_perfil/samuel.png"} 
                   alt={personalInfo.fullName}
-                  className="w-full h-full object-cover object-top filter grayscale contrast-105"
+                  className="w-full h-full object-cover object-top"
+                  style={{ printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
                 />
               </div>
             </div>

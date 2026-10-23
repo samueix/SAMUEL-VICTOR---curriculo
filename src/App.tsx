@@ -27,7 +27,7 @@ import InteractiveContact from './components/InteractiveContact';
 import PrintResume from './components/PrintResume';
 import AdminPanel from './components/AdminPanel';
 import ProjectsSection from './components/ProjectsSection';
-import { trackEvent, checkAndUpdateOwnerMode } from './services/tracker';
+import { initTracker, trackEvent, checkAndUpdateOwnerMode } from './lib/track';
 
 import { 
   personalInfo as defaultPersonalInfo,
@@ -51,6 +51,7 @@ export default function App() {
   const [isPrintMode, setIsPrintMode] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [resumePrintWithPhoto, setResumePrintWithPhoto] = useState(false);
 
   // Core dynamic states initialized from localStorage with static fallbacks
   const [personalInfo, setPersonalInfo] = useState(() => {
@@ -238,11 +239,32 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Rastreamento silencioso de acesso e validação do Modo Dono (?owner=1 ativa / ?owner=0 desativa)
+  // Inicialização do rastreamento silencioso e métricas de engajamento
   useEffect(() => {
-    checkAndUpdateOwnerMode();
-    trackEvent('acesso', 'Acesso inicial ao portfólio');
+    initTracker();
   }, []);
+
+  // Gerenciamento dinâmico de document.title para impressão oficial (Ctrl+P e botões)
+  useEffect(() => {
+    let originalTitle = document.title;
+    const handleBeforePrint = () => {
+      originalTitle = document.title;
+      document.title = resumePrintWithPhoto
+        ? 'Samuel Victor da Silva Nobre - Currículo (com foto)'
+        : 'Samuel Victor da Silva Nobre - Currículo';
+    };
+
+    const handleAfterPrint = () => {
+      document.title = originalTitle;
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [resumePrintWithPhoto]);
 
   // Atalho oculto para o Kit do Candidato (#admin na URL ou Alt+A no teclado)
   useEffect(() => {
@@ -319,6 +341,15 @@ export default function App() {
 
   const handleDownloadPdf = () => {
     trackEvent('baixar_pdf', 'Download/Impressão via botão Baixar Currículo PDF');
+    setResumePrintWithPhoto(false);
+    const orig = document.title;
+    document.title = 'Samuel Victor da Silva Nobre - Currículo';
+    const restore = () => {
+      document.title = orig;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+
     setIsPrintMode(true);
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(() => {
@@ -337,7 +368,7 @@ export default function App() {
         certifications={certifications}
         educations={educations}
         projects={projects}
-        showPhoto={false}
+        showPhoto={resumePrintWithPhoto}
       />
     );
   }
@@ -378,6 +409,25 @@ export default function App() {
             }
           }}
           personalInfo={personalInfo}
+          onPrintResume={(withPhoto) => {
+            setIsAdminMode(false);
+            setResumePrintWithPhoto(withPhoto);
+            const orig = document.title;
+            const printTitle = withPhoto
+              ? 'Samuel Victor da Silva Nobre - Currículo (com foto)'
+              : 'Samuel Victor da Silva Nobre - Currículo';
+            document.title = printTitle;
+            const restore = () => {
+              document.title = orig;
+              window.removeEventListener('afterprint', restore);
+            };
+            window.addEventListener('afterprint', restore);
+            setIsPrintMode(true);
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            setTimeout(() => {
+              window.print();
+            }, 300);
+          }}
         />
       )}
 
@@ -707,7 +757,7 @@ export default function App() {
           certifications={certifications}
           educations={educations}
           projects={projects}
-          showPhoto={false}
+          showPhoto={resumePrintWithPhoto}
         />
       </div>
 
