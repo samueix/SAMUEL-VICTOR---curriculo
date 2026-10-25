@@ -24,7 +24,9 @@ const ALLOWED_EVENTS = [
   'clique_email',
   'clique_linkedin',
   'clique_github',
-  'clique_telefone'
+  'clique_telefone',
+  'recado_empresa',
+  'abrir_recado'
 ];
 
 const ALLOWED_SECTIONS = [
@@ -47,12 +49,19 @@ const TITULOS = {
   clique_email: '✉️ CLIQUE NO E-MAIL',
   clique_linkedin: '💼 CLIQUE NO LINKEDIN',
   clique_github: '🐙 CLIQUE NO GITHUB',
-  clique_telefone: '📞 CLIQUE NO TELEFONE'
+  clique_telefone: '📞 CLIQUE NO TELEFONE',
+  recado_empresa: '💼 NOVO RECADO / PROPOSTA DE EMPRESA',
+  abrir_recado: '📝 ABERTURA DO FORMULÁRIO DE RECADO'
 };
 
-function cleanString(val, maxLen = 80) {
+function cleanString(val, maxLen = 100) {
   if (typeof val !== 'string') return '';
   return val.replace(/[\x00-\x1F\x7F\r\n]/g, '').trim().slice(0, maxLen);
+}
+
+function cleanMultiline(val, maxLen = 2000) {
+  if (typeof val !== 'string') return '';
+  return val.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '').trim().slice(0, maxLen);
 }
 
 function safeCompare(a, b) {
@@ -68,6 +77,36 @@ function safeCompare(a, b) {
 }
 
 function formatTelegramMessage(reg) {
+  if (reg.event === 'recado_empresa') {
+    const lines = [];
+    lines.push('💼 *NOVO RECADO / PROPOSTA DE EMPRESA*');
+    lines.push('');
+    lines.push(`🏢 *Empresa:* ${reg.empresa || 'Não informada'}`);
+    lines.push(`👤 *Responsável:* ${reg.nome || 'Não informado'}`);
+    lines.push(`✉️ *E-mail / Gmail:* ${reg.email || 'Não informado'}`);
+    if (reg.telefone) {
+      lines.push(`📞 *WhatsApp / Tel:* ${reg.telefone}`);
+    }
+    lines.push(`🎯 *Assunto / Vaga:* ${reg.assunto || 'Oportunidade Profissional'}`);
+    lines.push('');
+    lines.push('📝 *Mensagem / Recado:*');
+    lines.push(reg.mensagem || '(Sem mensagem adicional)');
+    lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza}`);
+    const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
+    lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}${reg.isp ? ` (Provedor: ${reg.isp})` : ''}`);
+    let devIcon = '💻';
+    if (reg.device === 'celular') devIcon = '📱';
+    else if (reg.device === 'tablet') devIcon = '📟';
+    lines.push(`${devIcon} Aparelho: ${reg.device} | ${reg.os} | ${reg.browser} ${reg.browserMajor}`);
+    if (reg.resolucao) lines.push(`🖥️ Tela: ${reg.resolucao} (${reg.orientacao || 'Paisagem'})`);
+    lines.push(`🌐 Idioma e Fuso: ${reg.idiomas || reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`);
+    if (reg.conn) lines.push(`📶 Conexão: ${reg.conn}${reg.conexaoVelocidade ? ` (~${reg.conexaoVelocidade})` : ''}`);
+    lines.push(`🔗 Página: ${reg.path || '/'}`);
+    return lines.join('\n');
+  }
+
   const lines = [];
   lines.push(TITULOS[reg.event] || `🔔 AÇÃO: ${reg.event.toUpperCase()}`);
   lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza}`);
@@ -76,21 +115,29 @@ function formatTelegramMessage(reg) {
   }
   lines.push(`🔗 Origem: ${reg.referrer || 'Acesso Direto'}`);
   const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
-  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
+  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}${reg.isp ? ` (Provedor: ${reg.isp})` : ''}`);
   
   let deviceEmoji = '💻';
   if (reg.device === 'celular') deviceEmoji = '📱';
   else if (reg.device === 'tablet') deviceEmoji = '📟';
   lines.push(`${deviceEmoji} Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser} ${reg.browserMajor}`.trim());
 
-  let fusoLine = `🌐 Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
+  if (reg.resolucao) {
+    lines.push(`🖥️ Tela: ${reg.resolucao} (${reg.orientacao || 'Paisagem'}) | ${reg.viewport}`);
+  }
+  if (reg.nucleosCpu || reg.memoriaGb) {
+    const hwParts = [reg.nucleosCpu, reg.memoriaGb].filter(Boolean);
+    lines.push(`⚙️ Hardware estimado: ${hwParts.join(' | ')}`);
+  }
+
+  let fusoLine = `🌐 Idioma e Fuso: ${reg.idiomas || reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
   if (reg.tzDiverge) {
     fusoLine += ' ⚠️ fuso diferente do país (possível VPN)';
   }
   lines.push(fusoLine);
 
   if (reg.conn) {
-    lines.push(`📶 Tipo de conexão: ${reg.conn}`);
+    lines.push(`📶 Tipo de conexão: ${reg.conn}${reg.conexaoVelocidade ? ` (~${reg.conexaoVelocidade})` : ''}`);
   }
   if (reg.tema) {
     const temaDesc = reg.tema === 'escuro' ? '🌙 Escuro' : (reg.tema === 'claro' ? '☀️ Claro' : reg.tema);
@@ -174,7 +221,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Limite de tamanho de corpo: max 2 KB
+    // 1. Limite de tamanho de corpo: max 8 KB (permite mensagens completas de recrutadores)
     let rawBody = req.body;
     let rawString = '';
     if (typeof rawBody === 'string') {
@@ -185,7 +232,7 @@ export default async function handler(req, res) {
       rawString = JSON.stringify(rawBody);
     }
 
-    if (rawString.length > 2048) {
+    if (rawString.length > 8192) {
       res.statusCode = 204;
       return res.end();
     }
@@ -225,15 +272,16 @@ export default async function handler(req, res) {
     }
 
     const acceptLanguage = req.headers['accept-language'];
-    // Ignorar robôs conhecidos por User-Agent
+    // Ignorar robôs conhecidos por User-Agent (não bloqueia navegadores in-app do Telegram ou WhatsApp)
     const userAgent = req.headers['user-agent'] || '';
-    const isBot = /bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegram|linkedinbot|slurp|headless|lighthouse|pingdom|python|node-fetch|go-http|httpclient/i.test(userAgent);
-    if (isBot) {
+    const isBot = /bot\b|crawler|spider|googlebot|bingbot|slurp|headless|lighthouse|pingdom|python|node-fetch|go-http|httpclient/i.test(userAgent);
+    if (isBot && body.event !== 'recado_empresa') {
       res.statusCode = 204;
       return res.end();
     }
 
-    if (body.humano !== 'provavel') {
+    const isHumanValid = body.humano === 'provavel' || body.event === 'recado_empresa';
+    if (!isHumanValid) {
       res.statusCode = 204;
       return res.end();
     }
@@ -245,18 +293,19 @@ export default async function handler(req, res) {
       return res.end();
     }
 
-    // 4. Validação e sanitização dos campos (max 80 chars, sem controles)
+    // 4. Validação e sanitização dos campos
     const sid = cleanString(body.sid, 36);
     if (!sid) {
       res.statusCode = 204;
       return res.end();
     }
 
-    // 5. Deduplicação por (sid + event) - ignora se repetido em menos de 15 segundos
+    // 5. Deduplicação com janela de tempo: 3s para recados de empresas, 15s para cliques/acessos
     const dedupeKey = `${sid}:${event}`;
     const nowMs = Date.now();
     const lastSeen = seenEvents.get(dedupeKey);
-    if (lastSeen && (nowMs - lastSeen < 15000)) {
+    const minInterval = event === 'recado_empresa' ? 3000 : 15000;
+    if (lastSeen && (nowMs - lastSeen < minInterval)) {
       res.statusCode = 204;
       return res.end();
     }
@@ -299,11 +348,31 @@ export default async function handler(req, res) {
       ? body.secoes.filter(s => typeof s === 'string' && ALLOWED_SECTIONS.includes(s)).slice(0, 7)
       : [];
 
-    // Local aproximado SOMENTE por cabeçalhos da Vercel (sem ler nem registrar IP)
-    const pais = cleanString(req.headers['x-vercel-ip-country'] || '');
-    const regiao = cleanString(req.headers['x-vercel-ip-country-region'] || '');
+    // Dados específicos de recado profissional / proposta
+    const nome = cleanString(body.nome, 80);
+    const empresa = cleanString(body.empresa, 80);
+    const email = cleanString(body.email, 100);
+    const telefone = cleanString(body.telefone, 30);
+    const assunto = cleanString(body.assunto, 100);
+    const mensagem = cleanMultiline(body.mensagem, 2000);
+
+    // Metadados adicionais do visitante
+    const resolucao = cleanString(body.resolucao, 30);
+    const orientacao = cleanString(body.orientacao, 20);
+    const profundidadeCores = cleanString(body.profundidadeCores, 20);
+    const nucleosCpu = cleanString(body.nucleosCpu, 20);
+    const memoriaGb = cleanString(body.memoriaGb, 20);
+    const toque = cleanString(body.toque, 10);
+    const idiomas = cleanString(body.idiomas, 60);
+    const conexaoVelocidade = cleanString(body.conexaoVelocidade, 20);
+
+    // Local aproximado: primeiro tenta cabeçalhos nativos da Vercel
+    let pais = cleanString(req.headers['x-vercel-ip-country'] || '');
+    let regiao = cleanString(req.headers['x-vercel-ip-country-region'] || '');
     let cidade = '';
     let vercelTz = '';
+    let isp = '';
+
     try {
       cidade = req.headers['x-vercel-ip-city'] ? cleanString(decodeURIComponent(req.headers['x-vercel-ip-city'])) : '';
     } catch {
@@ -313,6 +382,36 @@ export default async function handler(req, res) {
       vercelTz = req.headers['x-vercel-ip-timezone'] ? cleanString(decodeURIComponent(req.headers['x-vercel-ip-timezone'])) : '';
     } catch {
       vercelTz = cleanString(req.headers['x-vercel-ip-timezone'] || '');
+    }
+
+    // Se estiver em preview/ambiente local ou Vercel headers vazios, faz consulta silenciosa de geo no servidor
+    if (!pais && !cidade) {
+      const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                       req.headers['x-real-ip'] || 
+                       req.socket?.remoteAddress || '';
+      const isLocal = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1' || 
+                      clientIp.startsWith('10.') || clientIp.startsWith('192.168.') || clientIp.startsWith('172.');
+      if (!isLocal) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 1200);
+          const geoRes = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,isp,org`, {
+            signal: ctrl.signal
+          });
+          clearTimeout(timer);
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            if (geoData.status === 'success') {
+              cidade = cleanString(geoData.city || '');
+              regiao = cleanString(geoData.regionName || '');
+              pais = cleanString(geoData.country || '');
+              isp = cleanString(geoData.isp || geoData.org || '');
+            }
+          }
+        } catch {
+          // Silencioso
+        }
+      }
     }
 
     const tzDiverge = Boolean(vercelTz && tz && vercelTz !== tz);
@@ -348,9 +447,26 @@ export default async function handler(req, res) {
       pais,
       regiao,
       cidade,
+      isp,
       duracaoS,
       scrollMax,
-      secoes
+      secoes,
+      // Campos de Recado de Empresa
+      nome,
+      empresa,
+      email,
+      telefone,
+      assunto,
+      mensagem,
+      // Metadados enriquecidos
+      resolucao,
+      orientacao,
+      profundidadeCores,
+      nucleosCpu,
+      memoriaGb,
+      toque,
+      idiomas,
+      conexaoVelocidade
     };
 
     // 6. Enviar ao Telegram (aguardar antes de responder)
@@ -365,7 +481,7 @@ export default async function handler(req, res) {
       if (telegramTimestamps.length < 30) {
         telegramTimestamps.push(nowMs);
         try {
-          await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+          const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -374,8 +490,12 @@ export default async function handler(req, res) {
               disable_web_page_preview: true
             })
           });
-        } catch {
-          // Silencioso; nunca registrar tokens em logs
+          if (!tgRes.ok) {
+            const errText = await tgRes.text();
+            console.error('Erro na resposta do Telegram:', tgRes.status, errText);
+          }
+        } catch (tgErr) {
+          console.error('Falha de conexão com Telegram:', tgErr);
         }
       }
     }

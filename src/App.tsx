@@ -404,8 +404,18 @@ export default function App() {
           isOpen={isAdminMode}
           onClose={() => {
             setIsAdminMode(false);
-            if (window.location.hash === '#admin') {
-              history.replaceState(null, '', window.location.pathname + window.location.search);
+            try {
+              if (window.location.hash === '#admin') {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+              }
+              if (window.location.search.includes('admin=true')) {
+                const sp = new URLSearchParams(window.location.search);
+                sp.delete('admin');
+                const cleanQuery = sp.toString() ? `?${sp.toString()}` : '';
+                history.replaceState(null, '', window.location.pathname + cleanQuery + window.location.hash);
+              }
+            } catch {
+              // ignore
             }
           }}
           personalInfo={personalInfo}

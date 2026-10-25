@@ -33,9 +33,25 @@ interface EventRecord {
   pais?: string;
   regiao?: string;
   cidade?: string;
+  isp?: string;
   duracaoS?: number;
   scrollMax?: number;
   secoes?: string[];
+  // Campos de recado de empresas
+  nome?: string;
+  empresa?: string;
+  email?: string;
+  telefone?: string;
+  assunto?: string;
+  mensagem?: string;
+  // Metadados enriquecidos
+  resolucao?: string;
+  orientacao?: string;
+  nucleosCpu?: string;
+  memoriaGb?: string;
+  toque?: string;
+  idiomas?: string;
+  conexaoVelocidade?: string;
 }
 
 interface ApiResponse {
@@ -54,7 +70,9 @@ const EVENT_LABELS: Record<string, string> = {
   clique_telefone: 'Telefone',
   baixar_pdf: 'Baixar PDF',
   imprimir_curriculo: 'Impressão',
-  abrir_admin: 'Acesso Admin'
+  abrir_admin: 'Acesso Admin',
+  recado_empresa: '💼 Recado de Empresa',
+  abrir_recado: '📝 Abertura do Form Recado'
 };
 
 const TITULOS_TELEGRAM: Record<string, string> = {
@@ -67,10 +85,42 @@ const TITULOS_TELEGRAM: Record<string, string> = {
   clique_email: '✉️ CLIQUE NO E-MAIL',
   clique_linkedin: '💼 CLIQUE NO LINKEDIN',
   clique_github: '🐙 CLIQUE NO GITHUB',
-  clique_telefone: '📞 CLIQUE NO TELEFONE'
+  clique_telefone: '📞 CLIQUE NO TELEFONE',
+  recado_empresa: '💼 NOVO RECADO / PROPOSTA DE EMPRESA',
+  abrir_recado: '📝 ABERTURA DO FORMULÁRIO DE RECADO'
 };
 
 function formatTelegramText(reg: EventRecord): string {
+  if (reg.event === 'recado_empresa') {
+    const lines: string[] = [];
+    lines.push('💼 *NOVO RECADO / PROPOSTA DE EMPRESA*');
+    lines.push('');
+    lines.push(`🏢 *Empresa:* ${reg.empresa || 'Não informada'}`);
+    lines.push(`👤 *Responsável:* ${reg.nome || 'Não informado'}`);
+    lines.push(`✉️ *E-mail / Gmail:* ${reg.email || 'Não informado'}`);
+    if (reg.telefone) {
+      lines.push(`📞 *WhatsApp / Tel:* ${reg.telefone}`);
+    }
+    lines.push(`🎯 *Assunto / Vaga:* ${reg.assunto || 'Oportunidade Profissional'}`);
+    lines.push('');
+    lines.push('📝 *Mensagem / Recado:*');
+    lines.push(reg.mensagem || '(Sem mensagem adicional)');
+    lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza || reg.quando}`);
+    const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
+    lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}${reg.isp ? ` (Provedor: ${reg.isp})` : ''}`);
+    let devIcon = '💻';
+    if (reg.device === 'celular') devIcon = '📱';
+    else if (reg.device === 'tablet') devIcon = '📟';
+    lines.push(`${devIcon} Aparelho: ${reg.device} | ${reg.os} | ${reg.browser} ${reg.browserMajor}`);
+    if (reg.resolucao) lines.push(`🖥️ Tela: ${reg.resolucao} (${reg.orientacao || 'Paisagem'})`);
+    lines.push(`🌐 Idioma e Fuso: ${reg.idiomas || reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`);
+    if (reg.conn) lines.push(`📶 Conexão: ${reg.conn}${reg.conexaoVelocidade ? ` (~${reg.conexaoVelocidade})` : ''}`);
+    lines.push(`🔗 Página: ${reg.path || '/'}`);
+    return lines.join('\n');
+  }
+
   const lines: string[] = [];
   lines.push(TITULOS_TELEGRAM[reg.event] || `🔔 AÇÃO: ${String(reg.event).toUpperCase()}`);
   lines.push(`📅 Horário de Fortaleza: ${reg.quandoFortaleza || reg.quando}`);
@@ -79,21 +129,29 @@ function formatTelegramText(reg: EventRecord): string {
   }
   lines.push(`🔗 Origem: ${reg.referrer || 'Acesso Direto'}`);
   const localParts = [reg.cidade, reg.regiao, reg.pais].filter(Boolean);
-  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}`);
+  lines.push(`📍 Local aproximado: ${localParts.length > 0 ? localParts.join(', ') : 'Não identificado'}${reg.isp ? ` (Provedor: ${reg.isp})` : ''}`);
   
   let deviceEmoji = '💻';
   if (reg.device === 'celular') deviceEmoji = '📱';
   else if (reg.device === 'tablet') deviceEmoji = '📟';
   lines.push(`${deviceEmoji} Aparelho/Sistema/Navegador: ${reg.device || 'Desconhecido'} | ${reg.os || 'Outro'} | ${reg.browser || ''} ${reg.browserMajor || ''}`.trim());
 
-  let fusoLine = `🌐 Idioma e Fuso: ${reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
+  if (reg.resolucao) {
+    lines.push(`🖥️ Tela: ${reg.resolucao} (${reg.orientacao || 'Paisagem'}) | ${reg.viewport}`);
+  }
+  if (reg.nucleosCpu || reg.memoriaGb) {
+    const hwParts = [reg.nucleosCpu, reg.memoriaGb].filter(Boolean);
+    lines.push(`⚙️ Hardware estimado: ${hwParts.join(' | ')}`);
+  }
+
+  let fusoLine = `🌐 Idioma e Fuso: ${reg.idiomas || reg.lang || 'N/A'} | ${reg.tz || 'N/A'}`;
   if (reg.tzDiverge) {
     fusoLine += ' ⚠️ fuso diferente do país (possível VPN)';
   }
   lines.push(fusoLine);
 
   if (reg.conn) {
-    lines.push(`📶 Tipo de conexão: ${reg.conn}`);
+    lines.push(`📶 Tipo de conexão: ${reg.conn}${reg.conexaoVelocidade ? ` (~${reg.conexaoVelocidade})` : ''}`);
   }
   if (reg.tema) {
     const temaDesc = reg.tema === 'escuro' ? '🌙 Escuro' : (reg.tema === 'claro' ? '☀️ Claro' : reg.tema);
@@ -170,6 +228,7 @@ export default function AdminAccessLog() {
   const metrics = useMemo(() => {
     const list = data?.eventos || [];
     let acessos = 0;
+    let recados = 0;
     let whatsapp = 0;
     let email = 0;
     let linkedin = 0;
@@ -181,6 +240,7 @@ export default function AdminAccessLog() {
 
     for (const item of list) {
       if (item.event === 'acesso') acessos += 1;
+      else if (item.event === 'recado_empresa') recados += 1;
       else if (item.event === 'clique_whatsapp') whatsapp += 1;
       else if (item.event === 'clique_email') email += 1;
       else if (item.event === 'clique_linkedin') linkedin += 1;
@@ -200,6 +260,7 @@ export default function AdminAccessLog() {
 
     return {
       acessos,
+      recados,
       avgFormatted,
       whatsapp,
       email,
@@ -232,7 +293,7 @@ export default function AdminAccessLog() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(e => {
-        const str = `${e.event} ${e.cidade} ${e.regiao} ${e.pais} ${e.device} ${e.os} ${e.browser} ${e.ref} ${e.utm} ${e.referrer}`.toLowerCase();
+        const str = `${e.event} ${e.cidade} ${e.regiao} ${e.pais} ${e.device} ${e.os} ${e.browser} ${e.ref} ${e.utm} ${e.referrer} ${e.nome || ''} ${e.empresa || ''} ${e.email || ''} ${e.assunto || ''} ${e.mensagem || ''}`.toLowerCase();
         return str.includes(q);
       });
     }
@@ -390,6 +451,15 @@ export default function AdminAccessLog() {
           </span>
         </div>
 
+        <div className="p-3 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[8px]">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#059669] block">
+            Recados Empresas
+          </span>
+          <span className="text-xl font-bold font-display text-[#0F766E] mt-0.5 block">
+            {metrics.recados}
+          </span>
+        </div>
+
         <div className="p-3 bg-[#FAF9F5] border border-[#E6E1D6] rounded-[8px]">
           <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#5B5E62] block">
             WhatsApp
@@ -475,7 +545,7 @@ export default function AdminAccessLog() {
             <Search className="w-3.5 h-3.5 text-[#5B5E62] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar cidade, ref, navegador..."
+              placeholder="Buscar cidade, ref, navegador, empresa..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FFFBF2] border border-[#E6E1D6] rounded-full text-[#1B2430] focus:outline-none focus:border-[#0F766E]"
@@ -493,6 +563,7 @@ export default function AdminAccessLog() {
               className="bg-white border border-[#E6E1D6] rounded-[6px] px-2.5 py-1 text-xs font-medium text-[#1B2430] focus:outline-none focus:border-[#0F766E]"
             >
               <option value="todos">Todos os Eventos</option>
+              <option value="recado_empresa">💼 Recados de Empresas (recado_empresa)</option>
               <option value="acesso">Novo Acesso (acesso)</option>
               <option value="resumo_visita">Resumo de Visita (resumo_visita)</option>
               <option value="clique_whatsapp">WhatsApp (clique_whatsapp)</option>

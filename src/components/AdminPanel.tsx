@@ -56,7 +56,15 @@ export default function AdminPanel({
     } catch {
       // ignore
     }
-  }, []);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const websiteUrl = personalInfo.websiteUrl || 'https://samuel-victor-da-silva-nobre.vercel.app/';
 
@@ -136,8 +144,14 @@ ${personalInfo.phone} | ${personalInfo.email}`
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#1B2430]/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto no-print">
-      <div className="bg-[#FFFFFF] border border-[#E6E1D6] rounded-[16px] w-full max-w-4xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+    <div 
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto no-print animate-fade-in"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[#FFFFFF] border border-[#E6E1D6] rounded-[16px] w-full max-w-4xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh] relative z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header do Kit do Candidato */}
         <div className="p-4 sm:p-6 bg-[#FFFBF2] border-b border-[#E6E1D6] flex items-center justify-between">
@@ -156,11 +170,17 @@ ${personalInfo.phone} | ${personalInfo.email}`
           </div>
 
           <button
-            onClick={onClose}
-            className="p-2 text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] rounded-full transition-colors cursor-pointer"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="w-9 h-9 flex items-center justify-center text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] active:scale-95 rounded-full transition-all cursor-pointer border border-[#E6E1D6]"
             aria-label="Fechar painel"
+            title="Fechar (Esc)"
           >
-            <X className="w-5 h-5" strokeWidth={2.2} />
+            <X className="w-5 h-5" strokeWidth={2.4} />
           </button>
         </div>
 

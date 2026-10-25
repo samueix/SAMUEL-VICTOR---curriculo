@@ -1,8 +1,9 @@
-import React from 'react';
-import { Mail, Phone, Linkedin, MapPin, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Phone, Linkedin, MapPin, ArrowUpRight, Building2, MessageSquare, Sparkles } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { PersonalInfo, Message } from '../types';
 import { trackEvent } from '../services/tracker';
+import CompanyMessageModal from './CompanyMessageModal';
 
 interface InteractiveContactProps {
   personalInfo: PersonalInfo;
@@ -20,6 +21,7 @@ const getFormattedWhatsappUrl = (url: string) => {
 
 export default function InteractiveContact({ personalInfo }: InteractiveContactProps) {
   const shouldReduceMotion = useReducedMotion();
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
 
   const contactCards = [
     {
@@ -145,6 +147,53 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
           );
         })}
       </div>
+
+      {/* Card Especial de Recado Direto / Proposta de Empresas e Recrutadores */}
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 15 }}
+        whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={shouldReduceMotion ? undefined : { duration: 0.35, delay: 0.2 }}
+        className="p-6 sm:p-7 rounded-[16px] border border-[#E6E1D6] bg-gradient-to-r from-[#FFFFFF] via-[#FFFBF2] to-[#F1EEE6] shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-5 transition-all hover:border-[#0F766E] hover:shadow-[4px_4px_0px_#0F766E]"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#0F766E] text-white flex items-center justify-center shrink-0 shadow-md">
+            <Building2 className="w-6 h-6 text-white" strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              <h4 className="font-display font-bold text-base sm:text-lg text-[#1B2430]">
+                Representa uma Empresa ou é Recrutador?
+              </h4>
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Contato Direto
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#4A5565] max-w-2xl leading-relaxed font-medium">
+              Deixe seu e-mail/Gmail, o nome da empresa e o recado ou detalhes da oportunidade. Samuel receberá seus dados diretamente para retorno com máxima prioridade.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsCompanyModalOpen(true);
+            trackEvent('abrir_recado', 'Abertura do formulário de recado para empresas');
+          }}
+          className="w-full md:w-auto px-6 py-3.5 rounded-xl bg-[#0F766E] hover:bg-[#0D655E] text-white font-bold text-sm flex items-center justify-center gap-2.5 shadow-md hover:-translate-y-0.5 transition-all shrink-0 cursor-pointer"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Deixar Recado / Proposta</span>
+        </button>
+      </motion.div>
+
+      {/* Modal / Aba Interna de Recado de Empresas */}
+      <CompanyMessageModal
+        isOpen={isCompanyModalOpen}
+        onClose={() => setIsCompanyModalOpen(false)}
+      />
     </div>
   );
 }

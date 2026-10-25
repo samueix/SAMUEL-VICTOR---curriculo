@@ -23,7 +23,9 @@ export type TrackEventType =
   | 'clique_email'
   | 'clique_linkedin'
   | 'clique_github'
-  | 'clique_telefone';
+  | 'clique_telefone'
+  | 'recado_empresa'
+  | 'abrir_recado';
 
 let trackerInitialized = false;
 let acessoEnviado = false;
@@ -216,24 +218,87 @@ function buildBasePayload(event: TrackEventType) {
   const { browser, browserMajor } = getBrowserInfo();
   const { ref, utm } = getParams();
 
+  // Coleta enriquecida não identificável (zero popups, zero permissões)
+  let resolucao = '';
+  let orientacao = '';
+  let profundidadeCores = '';
+  let nucleosCpu = '';
+  let memoriaGb = '';
+  let toque = 'Não';
+  let idiomas = '';
+  let conexaoVelocidade = '';
+
+  if (typeof window !== 'undefined') {
+    if (window.screen) {
+      resolucao = `${window.screen.width || 0}x${window.screen.height || 0}`;
+      profundidadeCores = `${window.screen.colorDepth || 24} bits`;
+      orientacao = window.screen.orientation?.type?.includes('portrait') ? 'Retrato' : 'Paisagem';
+    }
+    toque = ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0)) ? 'Sim' : 'Não';
+  }
+
+  if (typeof navigator !== 'undefined') {
+    nucleosCpu = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} núcleos` : '';
+    memoriaGb = (navigator as any).deviceMemory ? `${(navigator as any).deviceMemory} GB` : '';
+    idiomas = navigator.languages ? navigator.languages.slice(0, 3).join(', ') : (navigator.language || 'pt-BR');
+    conexaoVelocidade = (navigator as any).connection?.downlink ? `${(navigator as any).connection.downlink} Mbps` : '';
+  }
+
   return {
     event,
     sid: getSessionId(),
     ref,
     utm,
     referrer: getReferrerDomain(),
-    path: window.location.pathname.slice(0, 80),
+    path: typeof window !== 'undefined' ? window.location.pathname.slice(0, 80) : '/',
     device: getDevice(),
     os: getOS(),
     browser,
     browserMajor,
-    lang: (navigator.language || 'pt-BR').slice(0, 20),
+    lang: (typeof navigator !== 'undefined' && navigator.language ? navigator.language : 'pt-BR').slice(0, 20),
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Fortaleza',
     viewport: getViewport(),
     conn: getConn(),
     tema: getTema(),
-    humano: 'provavel' as const
+    humano: 'provavel' as const,
+    resolucao,
+    orientacao,
+    profundidadeCores,
+    nucleosCpu,
+    memoriaGb,
+    toque,
+    idiomas,
+    conexaoVelocidade
   };
+}
+
+/**
+ * Envia um recado ou proposta de empresa/recrutador diretamente ao Telegram
+ */
+export async function sendCompanyRecado(data: {
+  nome: string;
+  empresa: string;
+  email: string;
+  telefone?: string;
+  assunto: string;
+  mensagem: string;
+}): Promise<boolean> {
+  try {
+    const base = buildBasePayload('recado_empresa');
+    const payload = {
+      ...base,
+      ...data
+    };
+    const res = await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
 }
 
 /**
