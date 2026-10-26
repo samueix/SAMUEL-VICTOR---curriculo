@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Building2, 
@@ -47,6 +48,23 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  // Trava a rolagem da página ao fundo enquanto o modal estiver aberto
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -106,9 +124,9 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
     setErrorMessage(null);
   };
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md animate-fade-in no-print overflow-y-auto"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md animate-fade-in no-print overflow-y-auto"
       onClick={onClose}
     >
       <div 
@@ -138,7 +156,7 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
               e.stopPropagation();
               onClose();
             }}
-            className="w-9 h-9 flex items-center justify-center text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] active:scale-95 rounded-full transition-all cursor-pointer border border-[#E6E1D6]"
+            className="w-9 h-9 flex items-center justify-center text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] active:scale-95 rounded-full transition-all cursor-pointer border border-[#E6E1D6] shrink-0"
             aria-label="Fechar janela"
             title="Fechar (Esc)"
           >
@@ -351,6 +369,7 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
