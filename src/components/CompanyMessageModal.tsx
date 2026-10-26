@@ -32,10 +32,13 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
   const [telefone, setTelefone] = useState('');
   const [assunto, setAssunto] = useState('💼 Oportunidade CLT / PJ');
   const [mensagem, setMensagem] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [telefoneError, setTelefoneError] = useState<string | null>(null);
 
   // Fecha no pressionar da tecla Escape
   useEffect(() => {
@@ -68,10 +71,56 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
 
   if (!isOpen) return null;
 
+  const validateEmailFormat = (val: string) => {
+    const trimmed = val.trim();
+    if (!trimmed) {
+      return 'Por favor, informe um e-mail / Gmail para retorno.';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
+      return 'Informe um e-mail válido (exemplo: contato@empresa.com).';
+    }
+    return null;
+  };
+
+  const validatePhoneFormat = (val: string) => {
+    const trimmed = val.trim();
+    if (!trimmed) return null; // Telefone é opcional
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 13) {
+      return 'Informe um telefone válido com DDD (ex: (85) 98511-0225 ou 10 a 11 dígitos).';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setEmailError(null);
+    setTelefoneError(null);
 
+    // 1. Honeypot check: se preenchido por robô, finge sucesso sem disparar nada
+    if (honeypot.trim().length > 0) {
+      setIsSuccess(true);
+      return;
+    }
+
+    // 2. Limite de 1 envio por minuto por sessão
+    try {
+      const lastSent = sessionStorage.getItem('recado_empresa_last_sent');
+      if (lastSent) {
+        const elapsed = Date.now() - parseInt(lastSent, 10);
+        if (elapsed < 60000) {
+          const remaining = Math.ceil((60000 - elapsed) / 1000);
+          setErrorMessage(`Por favor, aguarde ${remaining} segundos antes de enviar outra mensagem.`);
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3. Validação dos campos
     if (!nome.trim()) {
       setErrorMessage('Por favor, informe seu nome ou o nome do responsável.');
       return;
@@ -80,10 +129,19 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
       setErrorMessage('Por favor, informe o nome da sua empresa ou organização.');
       return;
     }
-    if (!email.trim() || !email.includes('@') || !email.includes('.')) {
-      setErrorMessage('Por favor, informe um e-mail / Gmail válido para retorno.');
+
+    const emailErr = validateEmailFormat(email);
+    if (emailErr) {
+      setEmailError(emailErr);
       return;
     }
+
+    const phoneErr = validatePhoneFormat(telefone);
+    if (phoneErr) {
+      setTelefoneError(phoneErr);
+      return;
+    }
+
     if (!mensagem.trim()) {
       setErrorMessage('Por favor, escreva sua mensagem ou os detalhes da oportunidade.');
       return;
@@ -102,6 +160,11 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
       });
 
       if (ok) {
+        try {
+          sessionStorage.setItem('recado_empresa_last_sent', String(Date.now()));
+        } catch {
+          // ignore
+        }
         setIsSuccess(true);
         trackEvent('recado_empresa', `Recado enviado por ${empresa.trim()}`);
       } else {
@@ -120,8 +183,11 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
     setEmail('');
     setTelefone('');
     setMensagem('');
+    setHoneypot('');
     setIsSuccess(false);
     setErrorMessage(null);
+    setEmailError(null);
+    setTelefoneError(null);
   };
 
   return createPortal(
@@ -130,11 +196,11 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
       onClick={onClose}
     >
       <div 
-        className="bg-[#FFFFFF] border border-[#E6E1D6] rounded-[16px] w-full max-w-xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh] relative z-10"
+        className="bg-[#FFFFFF] border border-[#E6E1D6] rounded-[16px] w-full max-w-xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh] relative z-10"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Modal */}
-        <div className="p-4 sm:p-5 bg-[#FFFBF2] border-b border-[#E6E1D6] flex items-center justify-between">
+        {/* Header Modal - Fixo no topo */}
+        <div className="p-4 sm:p-5 bg-[#FFFBF2] border-b border-[#E6E1D6] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#0F766E] text-white flex items-center justify-center shadow-sm shrink-0">
               <Building2 className="w-5 h-5 text-white" strokeWidth={2.2} />
@@ -164,9 +230,9 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white">
-          {isSuccess ? (
+        {/* Modal Body / Formulário */}
+        {isSuccess ? (
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white">
             <div className="py-8 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-[#ECFDF5] text-[#059669] mx-auto flex items-center justify-center border border-[#A7F3D0]">
                 <CheckCircle2 className="w-8 h-8" strokeWidth={2.2} />
@@ -201,14 +267,31 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                 </button>
               </div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            {/* Área de campos rolável */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white space-y-4">
               {errorMessage && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
                   <span>{errorMessage}</span>
                 </div>
               )}
+
+              {/* Campo Honeypot invisível contra bots */}
+              <div style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0, overflow: 'hidden' }} aria-hidden="true">
+                <label htmlFor="hp_company_field">Favor não preencher</label>
+                <input
+                  id="hp_company_field"
+                  type="text"
+                  name="website_url_field"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Nome do Contato */}
@@ -222,7 +305,10 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                       type="text"
                       required
                       value={nome}
-                      onChange={(e) => setNome(e.target.value)}
+                      onChange={(e) => {
+                        setNome(e.target.value);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
                       placeholder="Ex: Mariana Silva"
                       className="w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border border-[#E6E1D6] rounded-lg focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] text-[#1B2430]"
                     />
@@ -240,7 +326,10 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                       type="text"
                       required
                       value={empresa}
-                      onChange={(e) => setEmpresa(e.target.value)}
+                      onChange={(e) => {
+                        setEmpresa(e.target.value);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
                       placeholder="Ex: Stefanini / Google / etc."
                       className="w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border border-[#E6E1D6] rounded-lg focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] text-[#1B2430]"
                     />
@@ -260,11 +349,30 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                       type="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={() => {
+                        if (email) {
+                          setEmailError(validateEmailFormat(email));
+                        }
+                      }}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
                       placeholder="seu.email@empresa.com"
-                      className="w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border border-[#E6E1D6] rounded-lg focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] text-[#1B2430]"
+                      className={`w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border rounded-lg focus:outline-none text-[#1B2430] ${
+                        emailError 
+                          ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                          : 'border-[#E6E1D6] focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E]'
+                      }`}
                     />
                   </div>
+                  {emailError && (
+                    <p className="text-xs text-red-600 font-medium mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{emailError}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Telefone / WhatsApp */}
@@ -277,11 +385,30 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                     <input
                       type="tel"
                       value={telefone}
-                      onChange={(e) => setTelefone(e.target.value)}
+                      onBlur={() => {
+                        if (telefone) {
+                          setTelefoneError(validatePhoneFormat(telefone));
+                        }
+                      }}
+                      onChange={(e) => {
+                        setTelefone(e.target.value);
+                        if (telefoneError) setTelefoneError(null);
+                        if (errorMessage) setErrorMessage(null);
+                      }}
                       placeholder="(85) 99999-9999"
-                      className="w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border border-[#E6E1D6] rounded-lg focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] text-[#1B2430]"
+                      className={`w-full pl-9 pr-3 py-2 text-sm bg-[#FFFBF2] border rounded-lg focus:outline-none text-[#1B2430] ${
+                        telefoneError 
+                          ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                          : 'border-[#E6E1D6] focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E]'
+                      }`}
                     />
                   </div>
+                  {telefoneError && (
+                    <p className="text-xs text-red-600 font-medium mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{telefoneError}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -323,51 +450,54 @@ export default function CompanyMessageModal({ isOpen, onClose }: CompanyMessageM
                   rows={4}
                   maxLength={1000}
                   value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
+                  onChange={(e) => {
+                    setMensagem(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="Olá Samuel, vimos seu portfólio e experiência em redes / suporte / TI e gostaríamos de saber sua disponibilidade para conversar a respeito de uma oportunidade..."
                   className="w-full p-3 text-sm bg-[#FFFBF2] border border-[#E6E1D6] rounded-lg focus:outline-none focus:border-[#0F766E] focus:ring-1 focus:ring-[#0F766E] text-[#1B2430] resize-none"
                 />
               </div>
+            </div>
 
-              {/* Botões do Rodapé */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#E6E1D6]">
-                <div className="flex items-center gap-1.5 text-xs text-[#0F766E] font-medium">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Mensagem enviada com prioridade direta</span>
-                </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] rounded-lg transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#0F766E] hover:bg-[#0D655E] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Enviando mensagem...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Enviar Proposta / Recado</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+            {/* Rodapé Fixo na base do modal */}
+            <div className="p-4 bg-[#FFFBF2] border-t border-[#E6E1D6] flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-1.5 text-xs text-[#4A5565] font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-[#0F766E] shrink-0" />
+                <span>Seus dados serão usados apenas para retornar este contato.</span>
               </div>
-            </form>
-          )}
-        </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-[#4A5565] hover:text-[#1B2430] hover:bg-[#F1EEE6] rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#0F766E] hover:bg-[#0D655E] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Enviando mensagem...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Enviar Proposta / Recado</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
       </div>
     </div>,
     document.body

@@ -254,9 +254,11 @@ export default function AdminAccessLog() {
     }
 
     const avgSeconds = countDuracao > 0 ? Math.round(totalDuracao / countDuracao) : 0;
-    const avgFormatted = avgSeconds >= 60 
-      ? `${Math.floor(avgSeconds / 60)}m ${avgSeconds % 60}s` 
-      : `${avgSeconds}s`;
+    const avgFormatted = countDuracao > 0
+      ? (avgSeconds >= 60 
+          ? `${Math.floor(avgSeconds / 60)}m ${avgSeconds % 60}s` 
+          : `${avgSeconds}s`)
+      : '—';
 
     return {
       acessos,

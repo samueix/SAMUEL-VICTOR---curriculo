@@ -143,7 +143,7 @@ export default function ProfileCard({ personalInfo, onDownloadClick }: ProfileCa
                   Presencial / Híbrido / Remoto
                 </span>
                 <span className="text-[11px] font-normal font-sans block text-[#4A5565] mt-1.5 leading-tight">
-                  disponibilidade total
+                  modalidade de trabalho
                 </span>
               </div>
             </div>

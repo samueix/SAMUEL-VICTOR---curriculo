@@ -221,6 +221,7 @@ ${personalInfo.phone} | ${personalInfo.email}`
                 <div>
                   <input
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Digite sua senha..."
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

@@ -107,9 +107,45 @@ export default function InteractiveContact({ personalInfo }: InteractiveContactP
                   )}
                 </div>
                 
-                <p className="font-bold text-base leading-snug break-all text-[#1B2430] mb-1">
-                  {card.value}
-                </p>
+                {card.title === 'E-mail' ? (
+                  <p className="font-bold text-[13px] leading-snug [overflow-wrap:normal] text-[#1B2430] mb-1">
+                    {(() => {
+                      const emailStr = String(card.value);
+                      const atIdx = emailStr.indexOf('@');
+                      if (atIdx !== -1) {
+                        return (
+                          <>
+                            {emailStr.slice(0, atIdx + 1)}
+                            <wbr />
+                            {emailStr.slice(atIdx + 1)}
+                          </>
+                        );
+                      }
+                      return emailStr;
+                    })()}
+                  </p>
+                ) : card.title === 'LinkedIn Oficial' ? (
+                  <p className="font-bold text-[13px] leading-snug [overflow-wrap:normal] text-[#1B2430] mb-1">
+                    {(() => {
+                      const linkedinStr = String(card.value);
+                      const inIdx = linkedinStr.indexOf('/in');
+                      if (inIdx !== -1) {
+                        return (
+                          <>
+                            {linkedinStr.slice(0, inIdx)}
+                            <wbr />
+                            {linkedinStr.slice(inIdx)}
+                          </>
+                        );
+                      }
+                      return linkedinStr;
+                    })()}
+                  </p>
+                ) : (
+                  <p className="font-bold text-base leading-snug [overflow-wrap:normal] text-[#1B2430] mb-1">
+                    {card.value}
+                  </p>
+                )}
                 <span className="text-xs text-[#4A5565] font-medium block">
                   {card.sub}
                 </span>

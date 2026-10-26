@@ -452,4 +452,5 @@ export function initTracker() {
 
   document.addEventListener('visibilitychange', handlePageExit);
   window.addEventListener('pagehide', sendResumoVisita);
+  window.addEventListener('beforeunload', sendResumoVisita);
 }
