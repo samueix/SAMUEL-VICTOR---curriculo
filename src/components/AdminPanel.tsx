@@ -47,6 +47,9 @@ export default function AdminPanel({
   const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
   const [copiedAts, setCopiedAts] = useState(false);
   const [resumePhotoChoice, setResumePhotoChoice] = useState<'sem_foto' | 'com_foto'>('sem_foto');
+  const [downloadedQr, setDownloadedQr] = useState(false);
+  const [copiedQrImage, setCopiedQrImage] = useState(false);
+  const [downloadedSvg, setDownloadedSvg] = useState(false);
 
   useEffect(() => {
     trackEvent('abrir_admin', 'Painel Administrativo exibido na tela');
@@ -101,6 +104,109 @@ export default function AdminPanel({
     navigator.clipboard.writeText(websiteUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const getQrCodeBlob = async (size = 600): Promise<Blob | null> => {
+    const svgEl = document.getElementById('admin-portfolio-qrcode') as unknown as SVGSVGElement | null;
+    if (!svgEl) return null;
+
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+
+    return new Promise((resolve) => {
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          resolve(null);
+          return;
+        }
+
+        // Fundo branco sólido para contraste e visualização limpa
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        // Margem de segurança de 36px
+        const padding = Math.round(size * 0.06);
+        ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+        URL.revokeObjectURL(url);
+
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/png');
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    });
+  };
+
+  const handleDownloadQrImage = async () => {
+    try {
+      trackEvent('baixar_pdf', 'Download da foto PNG do QR Code');
+      const blob = await getQrCodeBlob(600);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'qrcode-samuel-victor-portfolio.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setDownloadedQr(true);
+      setTimeout(() => setDownloadedQr(false), 2000);
+    } catch (e) {
+      console.error('Erro ao baixar foto do QR Code:', e);
+    }
+  };
+
+  const handleCopyQrImage = async () => {
+    try {
+      trackEvent('baixar_pdf', 'Cópia da foto PNG do QR Code');
+      const blob = await getQrCodeBlob(600);
+      if (!blob) return;
+
+      if (navigator.clipboard && typeof window.ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([
+          new window.ClipboardItem({
+            'image/png': blob
+          })
+        ]);
+        setCopiedQrImage(true);
+        setTimeout(() => setCopiedQrImage(false), 2000);
+      } else {
+        await handleDownloadQrImage();
+      }
+    } catch {
+      await handleDownloadQrImage();
+    }
+  };
+
+  const handleDownloadSvg = () => {
+    const svgEl = document.getElementById('admin-portfolio-qrcode') as unknown as SVGSVGElement | null;
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'qrcode-samuel-victor-portfolio.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setDownloadedSvg(true);
+    setTimeout(() => setDownloadedSvg(false), 2000);
   };
 
   const recruiterTemplates = [
@@ -460,33 +566,86 @@ ${personalInfo.phone} | ${personalInfo.email}`
               {/* Tab 4: QR Code do Portfólio */}
               {activeTab === 'qrcode' && (
                 <div className="space-y-6">
-                  <div className="bg-[#FFFBF2] border border-[#E6E1D6] p-6 rounded-[12px] flex flex-col md:flex-row items-center gap-6">
-                    <div className="p-3 bg-white border border-[#E6E1D6] rounded-[8px] shadow-sm shrink-0">
+                  <div className="bg-[#FFFBF2] border border-[#E6E1D6] p-6 rounded-[14px] flex flex-col md:flex-row items-center gap-6">
+                    <div className="p-4 bg-white border border-[#E6E1D6] rounded-[12px] shadow-sm shrink-0 flex flex-col items-center">
                       <QRCodeSVG 
+                        id="admin-portfolio-qrcode"
                         value={websiteUrl}
-                        size={160}
+                        size={180}
                         level="H"
                         bgColor="#ffffff"
                         fgColor="#1B2430"
                       />
+                      <span className="text-[11px] font-mono text-[#5B5E62] mt-3 font-semibold">
+                        600 × 600 px • Alta Resolução
+                      </span>
                     </div>
 
-                    <div className="space-y-3 flex-1 text-center md:text-left">
-                      <h4 className="text-base font-bold font-display text-[#1B2430]">
-                        QR Code Direto para o Portfólio
-                      </h4>
-                      <p className="text-xs sm:text-sm text-[#4A5565] leading-relaxed">
-                        Coloque este QR Code no cabeçalho do seu currículo físico impresso, cartões de visita ou apresentações técnicas para que recrutadores acessem seu portfólio apontando a câmera do celular.
-                      </p>
+                    <div className="space-y-3.5 flex-1 text-center md:text-left">
+                      <div>
+                        <h4 className="text-base sm:text-lg font-bold font-display text-[#1B2430]">
+                          QR Code Direto para o Portfólio
+                        </h4>
+                        <p className="text-xs sm:text-sm text-[#4A5565] leading-relaxed mt-1 font-medium">
+                          Use esta foto do QR Code no cabeçalho do seu currículo físico impresso, cartões de visita, apresentações ou envie diretamente para recrutadores pelo WhatsApp.
+                        </p>
+                      </div>
 
-                      <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start pt-1">
+                      {/* Botões de Ação */}
+                      <div className="flex flex-wrap items-center gap-2.5 justify-center md:justify-start pt-1">
+                        {/* Baixar Foto PNG */}
                         <button
-                          onClick={handleCopyLink}
-                          className="px-4 py-2 bg-white hover:bg-[#F1EEE6] text-[#0F766E] border border-[#0F766E] rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                          type="button"
+                          onClick={handleDownloadQrImage}
+                          className="px-4 py-2.5 bg-[#0F766E] hover:bg-[#0C5F58] active:scale-95 text-white rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                          title="Baixar imagem em PNG de alta resolução com fundo branco"
                         >
-                          {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                          <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link do Portfólio'}</span>
+                          {downloadedQr ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                          <span>{downloadedQr ? 'Foto Baixada!' : 'Baixar Foto (PNG)'}</span>
                         </button>
+
+                        {/* Copiar Foto para a Área de Transferência */}
+                        <button
+                          type="button"
+                          onClick={handleCopyQrImage}
+                          className="px-4 py-2.5 bg-white hover:bg-[#F1EEE6] active:scale-95 text-[#0F766E] border border-[#0F766E] rounded-full text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs"
+                          title="Copiar a imagem da foto para colar (Ctrl+V) direto no Word, WhatsApp ou Canva"
+                        >
+                          {copiedQrImage ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          <span>{copiedQrImage ? 'Foto Copiada!' : 'Copiar Foto'}</span>
+                        </button>
+
+                        {/* Baixar Vetor SVG */}
+                        <button
+                          type="button"
+                          onClick={handleDownloadSvg}
+                          className="px-3.5 py-2.5 bg-white hover:bg-[#F1EEE6] active:scale-95 text-[#4A5565] hover:text-[#1B2430] border border-[#E6E1D6] rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          title="Baixar arquivo vetorial SVG (ideal para gráficas e impressão profissional)"
+                        >
+                          {downloadedSvg ? <Check className="w-3.5 h-3.5 text-[#0F766E]" /> : <Download className="w-3.5 h-3.5" />}
+                          <span>{downloadedSvg ? 'SVG Baixado!' : 'Baixar Vetor (SVG)'}</span>
+                        </button>
+
+                        {/* Copiar Link */}
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          className="px-3.5 py-2.5 bg-white hover:bg-[#F1EEE6] active:scale-95 text-[#4A5565] hover:text-[#1B2430] border border-[#E6E1D6] rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          title="Copiar o link direto do portfólio"
+                        >
+                          {copiedLink ? <Check className="w-3.5 h-3.5 text-[#0F766E]" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                          <span>{copiedLink ? 'Link Copiado!' : 'Copiar Link'}</span>
+                        </button>
+                      </div>
+
+                      <div className="pt-1.5">
+                        <div className="p-3 bg-white border border-[#E6E1D6] rounded-[10px] text-xs text-[#4A5565] leading-relaxed">
+                          📌 <strong>Dicas de uso rápido:</strong>
+                          <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11.5px]">
+                            <li><strong>Copiar Foto:</strong> copia a imagem e permite colar com <em>Ctrl+V</em> direto no WhatsApp, Microsoft Word ou Canva.</li>
+                            <li><strong>Baixar Foto (PNG):</strong> salva a imagem nítida com fundo branco no seu computador ou celular.</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
