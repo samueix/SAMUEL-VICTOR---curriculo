@@ -70,16 +70,15 @@ export default function Header({ activeSection, setActiveSection, isPrintMode, s
           onClick={() => handleNavClick('inicio')}
           className="flex items-center gap-3 text-left focus:outline-none cursor-pointer group py-1"
         >
-          <span className="w-10 h-10 rounded-[10px] bg-[#0F766E] text-white flex items-center justify-center transition-transform group-hover:scale-105 shrink-0 shadow-sm p-2" aria-hidden="true">
-            <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="white" fillOpacity="0.2" />
-              <polyline points="14 2 14 8 20 8" />
-              <circle cx="9.5" cy="11" r="1.5" fill="currentColor" />
-              <line x1="13" y1="11" x2="16" y2="11" />
-              <line x1="8" y1="15" x2="16" y2="15" />
-              <line x1="8" y1="18" x2="13" y2="18" />
-            </svg>
-          </span>
+          <svg 
+            viewBox="0 0 64 64" 
+            className="w-9 h-9 shrink-0 transition-transform group-hover:scale-105 shadow-sm rounded-[9px]" 
+            aria-hidden="true"
+          >
+            <rect width="64" height="64" rx="14" fill="#0F766E"/>
+            <text x="32" y="41" textAnchor="middle" fontFamily="Arial,Helvetica,sans-serif" fontWeight="800" fontSize="28" fill="#FFFFFF">SV</text>
+            <rect x="16" y="46" width="32" height="5" rx="2.5" fill="#FFC940"/>
+          </svg>
           <div className="flex flex-col justify-center">
             <span className="block text-sm sm:text-base font-extrabold font-display text-[#1B2430] leading-none mb-1">
               Samuel Victor
